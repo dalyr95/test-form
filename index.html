@@ -75,7 +75,7 @@
 				return mergeDeep(target, ...sources);
 			}
 
-			function resolveModelPath(path, obj=self, separator='.') {
+			function resolveModelPath(path='', obj=self, separator='.') {
 				var properties = Array.isArray(path) ? path : path.split(separator);
 				if (properties[0] === 'fieldset') { properties.shift(); }
 				return properties.reduce((prev, curr) => prev && prev[curr], obj)
@@ -90,63 +90,40 @@
 
 				render() {
 					return (
-						<Form
-							attributes={{}}
-						>	
-							<h4>Basic Details</h4>
-							<p>Does your car have any of these features?</p>
-							<Fieldset
-								name="wheels_and_tyres"
-								attributes={{}}
-							>
-								<p>
-									<input type="checkbox" id="basic_details.sat_nav" name="fieldset.basic_details.sat_nav" value="sat_nav" checked/>
-									<label htmlFor="basic_details.sat_nav">Sat nav</label>
-								</p>
-								<p>
-									<input type="checkbox" id="basic_details.panoramic_roof" name="fieldset.basic_details.panoramic_roof" value="panoramic_roof" /><label htmlFor="basic_details.panoramic_roof">Panoramic roof / sun roof</label>
-								</p>
-								<p>
-									<input type="checkbox" id="basic_details.heated_seats" name="fieldset.basic_details.heated_seats" value="heated_seats"/><label htmlFor="basic_details.heated_seats">Heated seats</label>
-								</p>
-								<p>
-									<input type="checkbox" id="basic_details.parking_cam" name="fieldset.basic_details.parking_cam" value="parking_cam" /><label htmlFor="basic_details.parking_cam">Rear parking camera</label>
-								</p>
-								<p>
-									<input type="checkbox" id="basic_details.sound_system" name="fieldset.basic_details.sound_system" value="sound_system" /><label htmlFor="basic_details.sound_system">Upgraded sound system</label>
-								</p>
-							</Fieldset>
+						<Form>	
+							<h4>Movie</h4>
+							<p>Describe your movie</p>
+							<label htmlFor="title">Title</label><input type="text" id="title" name="movie.title" onChange={(e => {
+								e.currentTarget.value = e.target.value + '123';
+							})}/>
 
-							<hr/>
+							<label htmlFor="star">Star</label><input type="text" id="star" name="movie.star" />
+							<Error validate={(value) => {
+								console.log(124, value);
+								return value === 'scarjo'
+							}}>
+								<div>You know the answer is `scarjo`</div>
+							</Error>
 
-							<h4>Condition</h4>
-							<input type="text" name="condition.stoya.porn"/>
-							<input type="text" name="condition.stoya.scarjo"/>
-							<textarea name="condition.lexi" value="boobs"></textarea>
-							<hr/>
+							<label htmlFor="year">Year</label><input type="number" id="year" name="movie.year" />
+							<label htmlFor="genre">Genre</label><input type="text" id="genre" name="movie.genre" pattern="[0-9]*"/>
 
-							<h4>Service History</h4>
-							<input type="radio" name="service_history.scar" value="true"/>
-							<input type="radio" name="service_history.scar" value="false"/>
-							<hr/>
-
-							<Fieldset
-								name="wheels_and_tyres"
-								attributes={{}}
-							>
-								<input type="text" name="fieldset.wheels_and_tyres.equipment.sat_nav"/>
-								<input type="text" name="fieldset.wheels_and_tyres.equipment.roof"/>
-								<input type="number" name="fieldset.wheels_and_tyres.equipment.heated_seats"/>
-							</Fieldset>
-
+							<label htmlFor="crap">Crap</label><input type="checkbox" id="crap" checked name="crap" value="poo" />
+							
 							<div>
-								<div>
-									<div>
-										<section>Hello</section>
-									</div>
-								</div>
-
+								<Error
+									name="scarjo"
+									validate={(value) => {
+										return (value.length === 0 || value === 'beer')
+									}}
+								>
+									<div>You know the answer is `beer`</div>
+								</Error>
+								<hr/>
+								<textarea name="scarjo"></textarea>
 							</div>
+							
+							<input type="email" required id="star" name="movie.email" />
 						</Form>
 					);
 				}
@@ -157,109 +134,100 @@
 			class Form extends React.Component {
 				constructor(props) {
 					super(props);
-					window.Form = this;
+					window.a = this;
 					this.$form = React.createRef();
 
 					this.onBlur = this.onBlur.bind(this);
 					this.onChange = this.onChange.bind(this);
 					this.onFocus = this.onFocus.bind(this);
 					this.onSubmit = this.onSubmit.bind(this);
+
+					this._ParseDom = this._ParseDom.bind(this);
+					this._getDOMAttributes = this._getDOMAttributes.bind(this);
+					this._getReactProps = this._getReactProps.bind(this);
+					//
 					this.updateModel = this.updateModel.bind(this);
 					this.onUpdate = this.onUpdate.bind(this);
 
-					this.state = {
-						loaded: false,
-						model: null,
-						fieldSetModel: null
-					};
+					this._DOM = {};
+					this._ReactDOM = {};
+
+					this._formElementTypes = [
+						'button',
+						'datalist',
+						'fieldset',
+						'form',
+						'input',
+						'keygen',
+						'label',
+						'legend',
+						'meter',
+						'optgroup',
+						'option',
+						'output',
+						'progress',
+						'select',
+						'textarea'
+					];
+
+					this.state = {};
+
+					/**
+					 * TODO - Find a way to replace this.state._ReactDOM || this._ReactDOM;
+					 */
+				}
+
+				_ParseDom() {
+					let $form = this.$form.current;
+					let $elements = [...$form.elements];
+
+					$elements.forEach($el => {
+						let attributes = this._getDOMAttributes($el);
+						this._DOM = this.updateModel(attributes['name'], attributes, this._DOM);
+					});
+				}
+
+				_getDOMAttributes($el) {
+					let attributes = {};
+					let attrs = $el.attributes;
+					for(var i = attrs.length - 1; i >= 0; i--) {
+						attributes[attrs[i].name] = attrs[i].value;
+					}
+
+					attributes['checked'] = $el.checked;
+					attributes['value'] = $el.value;
+
+					return attributes;
+				}
+
+				_getReactProps($el) {
+					if (this._formElementTypes.includes($el.type)) {
+						let attributes = {
+							checked: false,
+							type: $el.type,
+							value: '',
+							...$el.props
+						}
+
+						return attributes;
+					}
+				}
+
+				_parseDOMAttributesToReactProps(dom) {
+					/**
+					 * `required` attribute comes back as `required === ''`
+					 */
+					dom.required = (dom.required != null) ? true : dom.required;
+					return dom;
 				}
 
 				componentDidMount() {
-					let $form = this.$form.current;
-					let $elements = [...$form.elements];
-
-					let model = {};
-					let fieldSetModel = {};
-
-					let elementModel = [];
-					let fieldsets =[];
-
-					$elements.forEach($el => {
-						if ($el.type === 'fieldset') {
-							fieldsets.push($el);
-							fieldSetModel[$el.name] = [];
-						}
-
-						let path = $el.name.split('.');
-
-						let $FieldSetNode = fieldsets.filter($field => $field.contains($el))[0];
-
-						if ($FieldSetNode !== $el && $FieldSetNode) {
-							path.shift();
-							if (!fieldSetModel[$FieldSetNode.name].includes(path[1])) {
-								fieldSetModel[$FieldSetNode.name].push(path[1]);
-							}
-						}
-
-						let obj = {}
-						elementModel.push(path.reduce(function(o, s, i) { return o[s] = (i === (path.length - 1)) ? null : {}; }, obj));
-						/**
-						 * TODO - Populate all form elements values properly
-						 */
-						if ($el.type === 'input' || $el.type === 'textarea') {
-
-						}
-						elementModel.push(obj);
-					});
-
-					elementModel.forEach(m => { mergeDeep(model, m) });
+					/*
+					this._ParseDom();
 
 					this.setState({
-						loaded: true,
-						model: model,
-						fieldSetModel: fieldSetModel
-					}, () => this.onUpdate);
-				}
-
-				onUpdate() {
-					let apiModel = JSON.parse(JSON.stringify(this.state.model));
-
-					Object.entries(this.state.fieldSetModel).forEach(m => {
-						let values = Object.values(resolveModelPath(`${m[0]}.${m[1]}`, apiModel));
-						values = values.filter(v => v);
-						this.updateModel(`${m[0]}.${m[1]}`, values, apiModel);
-					});
-					console.log('Sending to API =>', apiModel);
-					return;
-					/*
-					let $form = this.$form.current;
-					let $elements = [...$form.elements];
-
-					let values = [];
-					let fieldsets =[];
-					let types = {};
-
-					$elements.forEach(el => {
-						types[el.type] = (Number.isInteger(types[el.type])) ? (types[el.type] + 1) : 1;
-						if (el.type === 'fieldset') { fieldsets.push(el); }
-						if (fieldsets.filter(field => field.contains(el))[0]) { return; }
-
-						values.push({
-							type: el.type,
-							name: el.name,
-							values: (el.type === 'checkbox') ? el.checked.toString() : el.value
-						});
-					});
-
-					let msg = [];
-
-					Object.entries(types).forEach(type => {
-						msg.push(`${type[1]} ${type[0]} input${type[1] > 1 ? 's' : ''}`);
-					});
-
-					//console.log(`This form contains; ${msg.join(', ')}`);
-					//console.table(values);
-					//console.log(this.state.model);
+						_DOM: this._DOM
+					})
 					*/
 				}
 
@@ -268,16 +236,15 @@
 				}
 
 				onChange(e) {
-					let target = e.target;
-					let value = target.value;
-					console.log(target.name, target.checked);
-					if (target.type === 'checkbox' && !target.checked) {
-						value = null
-					}
+					//this._DOM = this.updateModel(e.target.name, this._getDOMAttributes(e.target), this._DOM);
 
+					let DOMAttributes = this._parseDOMAttributesToReactProps(this._getDOMAttributes(e.target));
+					DOMAttributes.valid = e.target.checkValidity();
+					console.log(444, mergeDeep(resolveModelPath(e.target.name, this.state._ReactDOM || this._ReactDOM), DOMAttributes));
+					this._ReactDOM = this.updateModel(e.target.name, mergeDeep(resolveModelPath(e.target.name, this.state._ReactDOM || this._ReactDOM), DOMAttributes), this.state._ReactDOM || this._ReactDOM);
 					this.setState({
-						model: this.updateModel(target.name, value)
-					}, this.onUpdate);
+						_ReactDOM: this._ReactDOM
+					});
 				}
 
 				onFocus(e) {
@@ -289,18 +256,28 @@
 					e.preventDefault();
 				}
 
+				onUpdate() {
+					let apiModel = JSON.parse(JSON.stringify(this.state.model));
+
+					Object.entries(this.state.fieldSetModel).forEach(m => {
+						let values = Object.values(resolveModelPath(`${m[0]}.${m[1]}`, apiModel));
+						values = values.filter(v => v);
+						this.updateModel(`${m[0]}.${m[1]}`, values, apiModel);
+					});
+					console.log('Sending to API =>', apiModel);
+				}
+
 				reportValidity(e) {
 					console.log('reportValidity');
 				}
 
-				updateModel(path, value, obj, separator='.') {
-					obj = obj || this.state.model;
+				updateModel(path='', value, obj={}, separator='.') {
+					//obj = JSON.parse(JSON.stringify(obj));
+
 					var properties = Array.isArray(path) ? path : path.split(separator);
-					if (properties[0] === 'fieldset') {
-						properties.shift();
-					}
 
 					properties.reduce((prev, curr, i) => {
+						if (!prev[curr]) { prev[curr] = {}; }
 						if (i === properties.length - 1) { prev[curr] = value; }
 						return prev && prev[curr];
 					}, obj);
@@ -311,84 +288,64 @@
 				render() {
 					let renderWrappedChildren = (children) => {
 						// Traverse through all children with pretty functional way :-)
-						return React.Children.map(children, (child) => {
+						return React.Children.map(children, (child, i) => {
 							// This is support for non-node elements (eg. pure text), they have no props
 							if (!child.props) {
 								return child;
+							}
+							
+							if (child.type === Error) {
+								let a = resolveModelPath(child.props.name || children[i - 1].props.name, this.state._ReactDOM || this._ReactDOM);
+								if (!a) {
+									console.warn(`Surpress warning on load. Could not find an matching input for \`Error\` Component ${child.props.name || children[i - 1].props.name}`);
+									return null;
+								}
+
+								return React.cloneElement(child, {
+									children: renderWrappedChildren(child.props.children),
+									input: resolveModelPath(child.props.name || children[i - 1].props.name, this.state._ReactDOM || this._ReactDOM)
+								});
 							}
 
 							// If current component has additional children, traverse through them as well!
 							if (child.props.children) {
 								// You have to override also children here
 								return React.cloneElement(child, {
-									children: renderWrappedChildren(child.props.children)
+									children: renderWrappedChildren(child.props.children),
 								})
 							}
 
-							if (child.props.name) {
-								let value = resolveModelPath(child.props.name, this.state.model);
+							let _ReactProps = resolveModelPath(child.props.name, this.state._ReactDOM || this._ReactDOM);
 
-								if (child.type === 'input' || child.type === 'textarea') {
-									if (child.props.type === 'checkbox' || child.props.type === 'radio1') {
-										console.log('valueeeee', value);
-										value = child.props.value;
-									} else {
-										if (value == null) { value = child.props.value; }
-										if (value == null) { value = ''; } // Don't allow to go from uncontrolled to controlled component
-									}
+							_ReactProps = this._getReactProps(child);
+							this.updateModel(child.props.name, _ReactProps, this.state._ReactDOM || this._ReactDOM);
 
-									return React.createElement(child.type, {
-										onChange: child.props.onChange || (() => {
-											console.log('Changes to stop React moaning');
-										}),
-										...child.props,
-										// Anything that needs to overwritten in props put below
-										value: value,
-										//checked: true
-									});
-								}
+							if (_ReactProps && _ReactProps.valid === false) {
+								console.warn('Need to do something about this');
 							}
 
 							// Return new component with overridden `onChange` callback
-							return React.cloneElement(child, ...child.props)
+							return React.cloneElement(child, {
+								onChange: () => {
+									console.log('stop React from moaning');
+								},
+								...child.props,
+								//..._ReactProps,
+								valid: null
+							});
 						});
 					}
 
 					return (
 						<form
 							ref={this.$form}
-							{...this.props.attributes}
-							onBlur={this.onBlur}
+							{...this.props}
 							onChange={this.onChange}
-							onFocus={this.onFocus}
 							onSubmit={this.onSubmit}
+							//onInvalid={this.onChange}
 						>
 							{
 								(this.props.children) ? renderWrappedChildren(this.props.children) : (null)
-								/*
-								(this.props.children) ? this.props.children.map((c, i) => {
-								/**
-								 * TODO - Finish all inputs types
-								 * /
-								let value = (c.props.name) ? resolveModelPath(c.props.name, this.state.model) : '';
-
-								let key = `From-child-${i}`
-
-								if (c.props.name) {
-									let value = resolveModelPath(c.props.name, this.state.model);
-									if (c.type === 'input') {
-										return React.createElement('input', {
-											key: key,
-											onChange: c.props.onChange || (() => {console.log('Changes to stop React moaning')}),
-											value: value || c.props.value || '',
-											...c.props
-										});
-									}
-								}
-
-								return React.cloneElement(c, {key});
-							}) : (null)
-							*/
 							}
 						</form>
 					);
@@ -414,45 +371,44 @@
 					}
 				}
 
-				onChange(e) {
-					e.preventDefault();
-
-					let $elements = [...this.$fieldset.current.elements];
-
-					let values = {};
-
-					$elements.forEach(input => {
-						values[input.name] = input.value
-					});
-
-					if (this.state.serialization === 'array') {
-						values = Object.values(values).join();
-					} else {
-						values = JSON.stringify(values);
-					}
-					
-					this.setState({
-						value: values
-					});
-				}
-
 				render() {
-					/**
-					 * TODO - Feed in Form state into this and populate
-					 */
 					return (
 						<React.Fragment>
-							<input ref={this.$hidden} type="hidden" name={this.props.name || this.props.attributes.name} value={this.state.value} onChange={this.test}/>
 							<fieldset
 								ref={this.$fieldset}
 								name={this.props.name}
-								{...this.props.attributes}
-								onChange={this.onChange}
+								{...this.props}
 							>
-								{this.props.children}
+							{
+								React.Children.map(this.props.children, (child) => {
+									return React.cloneElement(c, {
+										key: `${this.props.name}-${child.props.name}`,
+										fieldset: this.props.name
+									});
+								})
+							}
 							</fieldset>
 						</React.Fragment>
 					);
+				}
+			}
+		</script>
+		<script type="text/babel">
+			class Error extends React.Component {
+				constructor(props) {
+					super(props);
+				}
+
+				render() {
+					let show;
+					console.log(9999, this.props, this.props.input.value);
+					if (typeof this.props.validate !== 'function') { console.warn(`Provide a validate function for "${this.props.input.name}" with value "${this.props.input.value}"`); }
+
+					show = (this.props.validate(this.props.input.value) === false) ? (
+						<span className='form-error'>111{this.props.message || this.props.children}</span>
+					) : (null);
+
+					return show;
 				}
 			}
 		</script>
