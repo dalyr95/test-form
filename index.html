@@ -317,8 +317,10 @@
 
 							let _ReactProps = resolveModelPath(child.props.name, this.state._ReactDOM || this._ReactDOM);
 
-							_ReactProps = this._getReactProps(child);
-							this.updateModel(child.props.name, _ReactProps, this.state._ReactDOM || this._ReactDOM);
+							if (!_ReactProps) {
+								_ReactProps = this._getReactProps(child);
+								this.updateModel(child.props.name, _ReactProps, this.state._ReactDOM || this._ReactDOM);
+							}
 
 							if (_ReactProps && _ReactProps.valid === false) {
 								console.warn('Need to do something about this');
