@@ -35,6 +35,18 @@
 			body {
 				padding: 20px;
 			}
+
+			form > div {
+				margin-bottom: 10px;
+			}
+
+			.form-error {
+				background-color: rgba(255, 0, 0, 0.2);
+				border-radius: 4px;
+				border: 2px solid red;
+				display: inline-block;
+				padding: 4px;
+			}
 		</style>
 
 	</head>
@@ -93,37 +105,66 @@
 						<Form>	
 							<h4>Movie</h4>
 							<p>Describe your movie</p>
-							<label htmlFor="title">Title</label><input type="text" id="title" name="movie.title" onChange={(e => {
-								e.currentTarget.value = e.target.value + '123';
-							})}/>
-
-							<label htmlFor="star">Star</label><input type="text" id="star" name="movie.star" />
-							<Error validate={(value) => {
-								console.log(124, value);
-								return value === 'scarjo'
-							}}>
-								<div>You know the answer is `scarjo`</div>
-							</Error>
-
-							<label htmlFor="year">Year</label><input type="number" id="year" name="movie.year" />
-							<label htmlFor="genre">Genre</label><input type="text" id="genre" name="movie.genre" pattern="[0-9]*"/>
-
-							<label htmlFor="crap">Crap</label><input type="checkbox" id="crap" checked name="crap" value="poo" />
+							<div>
+								<label htmlFor="title">Title</label>
+								<input type="text" id="title" name="movie.title" onChange={(e => {
+									if (e.currentTarget.value === 'hello') {
+										e.currentTarget.value = 'world';
+									}
+								})}/>
+							</div>
 							
+							<div>
+								<label htmlFor="star">Star</label>
+								<input type="text" id="star" name="movie.star" />
+								<Error validate={(value) => {
+									return value === 'scarjo'
+								}}>
+									<span>
+										<img src="https://pa1.narvii.com/6658/6a551ca46768479feb8c1317e33a821667c912bd_128.gif" style={{height: '20px', float: 'left', marginRight: '6px'}}/>
+										You know the answer is `scarjo`
+									</span>
+								</Error>
+							</div>
+							
+							<div>
+								<h4>Validate on blur</h4>
+								<label htmlFor="year">Year</label>
+								<input type="number" id="year" name="movie.year"/>
+								
+								<label htmlFor="genre">Genre</label>
+								<input type="text" id="genre" name="movie.genre" pattern="[0-9]*"/>
+							</div>
+							
+							<div>
+								<label htmlFor="crap">Crap</label>
+								<input type="checkbox" id="crap" checked name="crap" value="poo" />
+							</div>
+
 							<div>
 								<Error
 									name="scarjo"
 									validate={(value) => {
-										return (value.length === 0 || value === 'beer')
+										return (value.length === 0 || value === 'beer');
 									}}
 								>
 									<div>You know the answer is `beer`</div>
 								</Error>
 								<hr/>
-								<textarea name="scarjo"></textarea>
+								<textarea name="scarjo" placeholder="I need a beer"></textarea>
 							</div>
 							
 							<input type="email" required id="star" name="movie.email" />
+
+							<Fieldset name="movie.categories">
+								<div>
+									<label htmlFor="movie.categories.1">Categories</label>
+									<input type="text" id="movie.categories.1" name="movie.categories.1" />
+									
+									<label htmlFor="movie.categories.2">Categories</label>
+									<input type="text" id="movie.categories.2" name="movie.categories.2"/>
+								</div>
+							</Fieldset>
 						</Form>
 					);
 				}
@@ -148,6 +189,8 @@
 					//
 					this.updateModel = this.updateModel.bind(this);
 					this.onUpdate = this.onUpdate.bind(this);
+
+					this._initial = true;
 
 					this._DOM = {};
 					this._ReactDOM = {};
@@ -222,17 +265,21 @@
 				}
 
 				componentDidMount() {
-					/*
-					this._ParseDom();
-
-					this.setState({
-						_DOM: this._DOM
-					})
-					*/
+					this._initial = false;
 				}
 
 				onBlur(e) {
-					//console.log('onBlur');
+					console.log('onBlur', e.target.name);
+					this.setState({
+						$focused: null
+					});
+				}
+
+				onFocus(e) {
+					console.log('onFocus', e.target.name);
+					this.setState({
+						$focused: e.target
+					});
 				}
 
 				onChange(e) {
@@ -240,15 +287,11 @@
 
 					let DOMAttributes = this._parseDOMAttributesToReactProps(this._getDOMAttributes(e.target));
 					DOMAttributes.valid = e.target.checkValidity();
-					console.log(444, mergeDeep(resolveModelPath(e.target.name, this.state._ReactDOM || this._ReactDOM), DOMAttributes));
+
 					this._ReactDOM = this.updateModel(e.target.name, mergeDeep(resolveModelPath(e.target.name, this.state._ReactDOM || this._ReactDOM), DOMAttributes), this.state._ReactDOM || this._ReactDOM);
 					this.setState({
 						_ReactDOM: this._ReactDOM
-					});
-				}
-
-				onFocus(e) {
-					//console.log('onFocus');
+					}, () => this.onUpdate());
 				}
 
 				onSubmit(e) {
@@ -257,14 +300,34 @@
 				}
 
 				onUpdate() {
-					let apiModel = JSON.parse(JSON.stringify(this.state.model));
-
+					let model = JSON.parse(JSON.stringify(this.state._ReactDOM));
+					/*
 					Object.entries(this.state.fieldSetModel).forEach(m => {
 						let values = Object.values(resolveModelPath(`${m[0]}.${m[1]}`, apiModel));
 						values = values.filter(v => v);
 						this.updateModel(`${m[0]}.${m[1]}`, values, apiModel);
 					});
-					console.log('Sending to API =>', apiModel);
+					*/
+					/*
+					function process(obj) {
+						console.log(arguments);
+					}
+
+					function traverse(o,func) {
+						for (var i in o) {
+							if (o[i] !== null && typeof(o[i])=="object") {
+								//going one step down in the object tree!!
+								traverse(o[i],func);
+							} else {
+								func.apply(this,[i,o[i]]);
+							}
+						}
+					}
+
+					//that's all... no magic, no bloated framework
+					traverse(model,process);
+					*/
+					console.log('Sending to API =>', this.state._ReactDOM);
 				}
 
 				reportValidity(e) {
@@ -286,18 +349,20 @@
 				}
 
 				render() {
-					let renderWrappedChildren = (children) => {
+					let renderWrappedChildren = (children, mergeParentProps) => {
 						// Traverse through all children with pretty functional way :-)
 						return React.Children.map(children, (child, i) => {
 							// This is support for non-node elements (eg. pure text), they have no props
 							if (!child.props) {
 								return child;
 							}
-							
+
 							if (child.type === Error) {
 								let a = resolveModelPath(child.props.name || children[i - 1].props.name, this.state._ReactDOM || this._ReactDOM);
 								if (!a) {
-									console.warn(`Surpress warning on load. Could not find an matching input for \`Error\` Component ${child.props.name || children[i - 1].props.name}`);
+									if (!this._initial) {
+										console.warn(`Surpress warning on load. Could not find an matching input for \`Error\` Component ${child.props.name || children[i - 1].props.name}`);
+									}
 									return null;
 								}
 
@@ -310,20 +375,33 @@
 							// If current component has additional children, traverse through them as well!
 							if (child.props.children) {
 								// You have to override also children here
+								let parentProps = mergeParentProps;
+
+								if (child.type === Fieldset) {
+									parentProps = Object.assign(mergeParentProps || {}, {
+										fieldset: child.props.name
+									});
+								}
+
 								return React.cloneElement(child, {
-									children: renderWrappedChildren(child.props.children),
+									children: renderWrappedChildren(child.props.children, parentProps),
 								})
 							}
 
 							let _ReactProps = resolveModelPath(child.props.name, this.state._ReactDOM || this._ReactDOM);
-
-							if (!_ReactProps) {
+							
+							/**
+							 * Populate on initial render
+							 */
+							if (!_ReactProps && this._formElementTypes.includes(child.type)) {
 								_ReactProps = this._getReactProps(child);
+								_ReactProps = Object.assign({}, mergeParentProps, _ReactProps);
+
 								this.updateModel(child.props.name, _ReactProps, this.state._ReactDOM || this._ReactDOM);
 							}
 
 							if (_ReactProps && _ReactProps.valid === false) {
-								console.warn('Need to do something about this');
+								console.warn('HTML failed validation. Need to do something about this');
 							}
 
 							// Return new component with overridden `onChange` callback
@@ -332,7 +410,7 @@
 									console.log('stop React from moaning');
 								},
 								...child.props,
-								//..._ReactProps,
+								..._ReactProps,
 								valid: null
 							});
 						});
@@ -343,6 +421,8 @@
 							ref={this.$form}
 							{...this.props}
 							onChange={this.onChange}
+							onFocus={this.onFocus}
+							onBlur={this.onBlur}
 							onSubmit={this.onSubmit}
 							//onInvalid={this.onChange}
 						>
@@ -363,9 +443,6 @@
 					super(props);
 
 					this.$fieldset = React.createRef();
-					this.$hidden = React.createRef();
-
-					this.onChange = this.onChange.bind(this);
 
 					this.state = {
 						serialization: this.props.serialization || 'object',
@@ -375,22 +452,20 @@
 
 				render() {
 					return (
-						<React.Fragment>
-							<fieldset
-								ref={this.$fieldset}
-								name={this.props.name}
-								{...this.props}
-							>
-							{
+						<fieldset
+							ref={this.$fieldset}
+							name={this.props.name}
+							{...this.props}
+						>
+						{
 								React.Children.map(this.props.children, (child) => {
-									return React.cloneElement(c, {
+									return React.cloneElement(child, {
 										key: `${this.props.name}-${child.props.name}`,
 										fieldset: this.props.name
 									});
 								})
 							}
 							</fieldset>
-						</React.Fragment>
 					);
 				}
 			}
@@ -402,12 +477,25 @@
 				}
 
 				render() {
-					let show;
-					console.log(9999, this.props, this.props.input.value);
+					let show, valid;
+
 					if (typeof this.props.validate !== 'function') { console.warn(`Provide a validate function for "${this.props.input.name}" with value "${this.props.input.value}"`); }
+					if (this.props.input.value == null) { console.warn(`Provide a valid value for "${this.props.input.name}"`); }
+					
+					try {
+						valid = this.props.validate(this.props.input.value);
+					} catch(e) {
+						console.error(e);
+
+						return (null);
+					}
+
+					if (typeof valid !== 'boolean') {
+						console.warn(`Provide \`<Error/>\` component for "${this.props.input.name}" with value "${this.props.input.value}", a validation function which returns a boolean.`);
+					}
 
 					show = (this.props.validate(this.props.input.value) === false) ? (
-						<span className='form-error'>111{this.props.message || this.props.children}</span>
+						<div className='form-error'>{this.props.message || this.props.children}</div>
 					) : (null);
 
 					return show;
