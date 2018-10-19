@@ -121,7 +121,7 @@
 									return value === 'scarjo'
 								}}>
 									<span>
-										<img src="https://pa1.narvii.com/6658/6a551ca46768479feb8c1317e33a821667c912bd_128.gif" style={{height: '20px', float: 'left', marginRight: '6px'}}/>
+										<img src="https://pa1.narvii.com/6658/6a551ca46768479feb8c1317e33a821667c912bd_128.gif" style={{height: '20px', width: '20px', float: 'left', marginRight: '6px'}}/>
 										You know the answer is `scarjo`
 									</span>
 								</Error>
@@ -156,7 +156,7 @@
 							
 							<input type="email" required id="star" name="movie.email" />
 
-							<Fieldset name="movie.categories">
+							<Fieldset name="movie.categories" serialization="array">
 								<div>
 									<label htmlFor="movie.categories.1">Categories</label>
 									<input type="text" id="movie.categories.1" name="movie.categories.1" />
@@ -289,6 +289,7 @@
 					DOMAttributes.valid = e.target.checkValidity();
 
 					this._ReactDOM = this.updateModel(e.target.name, mergeDeep(resolveModelPath(e.target.name, this.state._ReactDOM || this._ReactDOM), DOMAttributes), this.state._ReactDOM || this._ReactDOM);
+
 					this.setState({
 						_ReactDOM: this._ReactDOM
 					}, () => this.onUpdate());
@@ -300,34 +301,7 @@
 				}
 
 				onUpdate() {
-					let model = JSON.parse(JSON.stringify(this.state._ReactDOM));
-					/*
-					Object.entries(this.state.fieldSetModel).forEach(m => {
-						let values = Object.values(resolveModelPath(`${m[0]}.${m[1]}`, apiModel));
-						values = values.filter(v => v);
-						this.updateModel(`${m[0]}.${m[1]}`, values, apiModel);
-					});
-					*/
-					/*
-					function process(obj) {
-						console.log(arguments);
-					}
-
-					function traverse(o,func) {
-						for (var i in o) {
-							if (o[i] !== null && typeof(o[i])=="object") {
-								//going one step down in the object tree!!
-								traverse(o[i],func);
-							} else {
-								func.apply(this,[i,o[i]]);
-							}
-						}
-					}
-
-					//that's all... no magic, no bloated framework
-					traverse(model,process);
-					*/
-					console.log('Sending to API =>', this.state._ReactDOM);
+					console.log('Sending to API =>', this._valueModel);
 				}
 
 				reportValidity(e) {
@@ -335,8 +309,6 @@
 				}
 
 				updateModel(path='', value, obj={}, separator='.') {
-					//obj = JSON.parse(JSON.stringify(obj));
-
 					var properties = Array.isArray(path) ? path : path.split(separator);
 
 					properties.reduce((prev, curr, i) => {
@@ -349,6 +321,9 @@
 				}
 
 				render() {
+					this._valueModel = {};
+					this._valueModelRaw = {};
+
 					let renderWrappedChildren = (children, mergeParentProps) => {
 						// Traverse through all children with pretty functional way :-)
 						return React.Children.map(children, (child, i) => {
@@ -361,7 +336,7 @@
 								let a = resolveModelPath(child.props.name || children[i - 1].props.name, this.state._ReactDOM || this._ReactDOM);
 								if (!a) {
 									if (!this._initial) {
-										console.warn(`Surpress warning on load. Could not find an matching input for \`Error\` Component ${child.props.name || children[i - 1].props.name}`);
+										console.warn(`Could not find an matching input for \`Error\` Component ${child.props.name || children[i - 1].props.name}`);
 									}
 									return null;
 								}
@@ -379,12 +354,13 @@
 
 								if (child.type === Fieldset) {
 									parentProps = Object.assign(mergeParentProps || {}, {
-										fieldset: child.props.name
+										fieldset: child.props.name,
+										serialization: child.props.serialization
 									});
 								}
 
 								return React.cloneElement(child, {
-									children: renderWrappedChildren(child.props.children, parentProps),
+									children: renderWrappedChildren(child.props.children, parentProps)
 								})
 							}
 
@@ -403,6 +379,34 @@
 							if (_ReactProps && _ReactProps.valid === false) {
 								console.warn('HTML failed validation. Need to do something about this');
 							}
+
+							if (_ReactProps) {
+								if (mergeParentProps && mergeParentProps.fieldset) {
+									// Format any fieldset children
+									let formatArray = (mergeParentProps.serialization === 'array');
+									let starter = (formatArray) ? [] : {};
+									let fieldset = resolveModelPath(mergeParentProps.fieldset, this._valueModel) || starter;
+
+									if (formatArray) {
+										fieldset.push(_ReactProps.value);
+									} else {
+										fieldset[child.props.name] = _ReactProps.value;
+									}
+									this.updateModel(mergeParentProps.fieldset, fieldset, this._valueModel);
+									
+									// Update RAW model
+									let fields = resolveModelPath(mergeParentProps.fieldset, this._valueModelRaw);
+									fields = fields || {};
+									fields.value = fieldset;
+									fields[child.props.name] = _ReactProps;
+									this.updateModel(mergeParentProps.fieldset, fields, this._valueModelRaw);
+								} else {
+									this.updateModel(child.props.name, { value: _ReactProps.value }, this._valueModel);
+									this.updateModel(child.props.name, _ReactProps, this._valueModelRaw);
+								}
+							}
+
+							console.log('raw', this._valueModelRaw);
 
 							// Return new component with overridden `onChange` callback
 							return React.cloneElement(child, {
@@ -441,23 +445,14 @@
 			class Fieldset extends React.Component {
 				constructor(props) {
 					super(props);
-
-					this.$fieldset = React.createRef();
-
-					this.state = {
-						serialization: this.props.serialization || 'object',
-						value: (this.props.serialization === 'array') ? '[]' : '{}'
-					}
 				}
 
 				render() {
 					return (
 						<fieldset
-							ref={this.$fieldset}
-							name={this.props.name}
 							{...this.props}
 						>
-						{
+							{
 								React.Children.map(this.props.children, (child) => {
 									return React.cloneElement(child, {
 										key: `${this.props.name}-${child.props.name}`,
@@ -465,7 +460,7 @@
 									});
 								})
 							}
-							</fieldset>
+						</fieldset>
 					);
 				}
 			}
