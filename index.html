@@ -69,7 +69,7 @@
 				margin-right: 6px;
 			}
 
-			input:not([type="checkbox"]) {
+			input:not([type="checkbox"]):not([type="radio"]) {
 				border: 2px solid #ccc;
 				border-radius: 4px;
 				-webkit-appearance: none;
@@ -299,6 +299,20 @@
 										<input type="text" id="movie.things.2" name="movie.things.2"/>
 									</div>
 								</Fieldset>
+
+									<legend>Select a maintenance drone</legend>
+
+									<div>
+										<input type="radio" id="huey" name="drone" value="huey" checked={true} />
+										<label htmlFor="huey">Huey</label>
+									</div>
+
+									<div>
+										<input type="radio" id="dewey" name="drone" value="dewey" checked={false}/>
+										<label htmlFor="dewey">Dewey</label>
+									</div>
+
+
 							</Form>
 						</React.Fragment>
 					);
@@ -611,6 +625,14 @@
 									_ReactProps.className = (this.state.seen[child.props.name]) ? `${_ReactProps.className || ''} seen` : _ReactProps.className;
 									if (_ReactProps.className) {
 										_ReactProps.className = _ReactProps.className.trimLeft();
+									}
+									
+									/**
+									 * TODO - Deal with radios
+									 */
+									if (child.type === 'input' && child.props.type === 'radio') {
+										_ReactProps.checked = (_ReactProps.value === child.props.value);
+										console.log(_ReactProps);
 									}
 
 									if (_ReactProps.value !== '' && _RAWdata.valid !== false) {
