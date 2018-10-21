@@ -429,14 +429,14 @@
 					if (this.props.onFocus) { this.props.onFocus(e, this.report()); }
 				}
 
-				onChange(e, name) {
+				onChange(e) {
 					if (this.props.persistEvents) { e.persist(); }
 
 					//this._DOM = this.updateModel(e.target.name, this._getDOMAttributes(e.target), this._DOM);
 					let DOMAttributes = this._parseDOMAttributesToReactProps(this._getDOMAttributes(e.target));
 					DOMAttributes.HTMLvalid = e.target.checkValidity();
 
-					this._ReactDOM = this.updateModel(name, mergeDeep(this.__resolveModelPath(e.target.name, this._ReactDOM), DOMAttributes), this._ReactDOM);
+					this._ReactDOM = this.updateModel(e.target.name, mergeDeep(this.__resolveModelPath(e.target.name, this._ReactDOM), DOMAttributes), this._ReactDOM);
 
 					this.setState({
 						_ReactDOM: this._ReactDOM
