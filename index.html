@@ -40,12 +40,22 @@
 				margin-bottom: 10px;
 			}
 
+			label {
+				margin-right: 6px;
+			}
+
 			.form-error {
 				background-color: rgba(255, 0, 0, 0.2);
 				border-radius: 4px;
 				border: 2px solid red;
 				display: inline-block;
+				margin-left: 6px;
 				padding: 4px;
+			}
+
+			.invalid {
+				background-color: rgba(255, 0, 0, 0.2);
+				box-shadow: 0 0 0 2px red;
 			}
 		</style>
 
@@ -117,11 +127,14 @@
 							<div>
 								<label htmlFor="star">Star</label>
 								<input type="text" id="star" name="movie.star" />
-								<Error validate={(value) => {
-									return value === 'scarjo'
-								}}>
+								<Error 
+									name="movie.star"
+									validate={(value) => {
+										return value === 'scarjo'
+									}}
+								>
 									<span>
-										<img src="https://pa1.narvii.com/6658/6a551ca46768479feb8c1317e33a821667c912bd_128.gif" style={{height: '20px', width: '20px', float: 'left', marginRight: '6px'}}/>
+										<img src="https://pa1.narvii.com/6658/6a551ca46768479feb8c1317e33a821667c912bd_128.gif" style={{height: '20px', width: '20px', backgroundColor: 'red', float: 'left', marginRight: '6px'}}/>
 										You know the answer is `scarjo`
 									</span>
 								</Error>
@@ -275,7 +288,7 @@
 				}
 
 				componentDidMount() {
-					this._initial = false;
+
 				}
 
 				onBlur(e) {
@@ -296,7 +309,7 @@
 					//this._DOM = this.updateModel(e.target.name, this._getDOMAttributes(e.target), this._DOM);
 
 					let DOMAttributes = this._parseDOMAttributesToReactProps(this._getDOMAttributes(e.target));
-					DOMAttributes.valid = e.target.checkValidity();
+					DOMAttributes.HTMLvalid = e.target.checkValidity();
 
 					this._ReactDOM = this.updateModel(e.target.name, mergeDeep(resolveModelPath(e.target.name, this.state._ReactDOM || this._ReactDOM), DOMAttributes), this.state._ReactDOM || this._ReactDOM);
 
@@ -344,12 +357,15 @@
 
 							if (child.type === Error) {
 								let a = resolveModelPath(child.props.name || children[i - 1].props.name, this.state._ReactDOM || this._ReactDOM);
+
 								if (!a) {
 									if (!this._initial) {
 										console.warn(`Could not find an matching input for \`Error\` Component ${child.props.name || children[i - 1].props.name}`);
 									}
 									return null;
 								}
+								
+								this.updateModel(child.props.name, {...a, valid: child.props.validate(a.value)}, this._valueModelRaw);
 
 								return React.cloneElement(child, {
 									children: renderWrappedChildren(child.props.children),
@@ -375,7 +391,7 @@
 							}
 
 							let _ReactProps = resolveModelPath(child.props.name, this.state._ReactDOM || this._ReactDOM);
-							
+
 							/**
 							 * Populate on initial render
 							 */
@@ -412,8 +428,23 @@
 									this.updateModel(mergeParentProps.fieldset, fields, this._valueModelRaw);
 								} else {
 									this.updateModel(child.props.name, { value: _ReactProps.value }, this._valueModel);
-									this.updateModel(child.props.name, _ReactProps, this._valueModelRaw);
+									
+									// Pass any existing values from `Error` components for example,
+									// this can be improved on
+									let existingRAWData = resolveModelPath(child.props.name, this._valueModelRaw) || {};
+									this.updateModel(child.props.name, {..._ReactProps, valid: existingRAWData.valid }, this._valueModelRaw);
 								}
+							}
+
+							// Remove any none DOM propierties
+							if (_ReactProps) {
+								['HTMLvalid'].forEach(key => {
+									delete _ReactProps[key];
+								});
+
+								// Modify any parameters going in
+								let _RAWdata = resolveModelPath(child.props.name, this._valueModelRaw) || {};
+								_ReactProps.className = (_RAWdata.valid === false) ? `${child.props.className || ''} invalid`.trimLeft() : child.props.className;
 							}
 
 							// Return new component with overridden `onChange` callback
@@ -427,6 +458,12 @@
 							});
 						});
 					}
+					
+					//if (this._initial) {
+						(this.props.children) ? renderWrappedChildren(this.props.children) : (null);
+					//}
+
+					this._initial = false;
 
 					return (
 						<form
@@ -487,6 +524,7 @@
 					
 					try {
 						valid = this.props.validate(this.props.input.value);
+						//this.props.updateModel(this.props.input.name, {...this.props.input, valid: valid}, this.props._valueModelRaw);
 					} catch(e) {
 						console.error(e);
 
