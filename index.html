@@ -154,7 +154,8 @@
 
 					this.state = {
 						progress: {},
-						persistEvents: true
+						persistEvents: true,
+						loading: true
 					};
 				}
 				
@@ -166,7 +167,28 @@
 					});
 				}
 
+				async componentDidMount() {
+					let offer = await fetch('/offer.json')
+										.then(resp => resp.json())
+										.then((offer) => {
+											console.log(offer);
+											this.setState({
+												loading: false,
+												offer: offer
+											});
+										});
+				}
+
 				render() {
+
+					if (this.state.loading) {
+						return (
+							<div className="loading">
+								Loading...
+							</div>
+						);
+					}
+
 					return (
 						<React.Fragment>
 							<div className="progress">
@@ -445,7 +467,7 @@
 
 				onChange(e) {
 					if (this.props.persistEvents) { e.persist(); }
-
+					console.log(e.target.name, e.target.value);
 					//this._DOM = this.updateModel(e.target.name, this._getDOMAttributes(e.target), this._DOM);
 					let DOMAttributes = this._parseDOMAttributesToReactProps(this._getDOMAttributes(e.target));
 					DOMAttributes.HTMLvalid = e.target.checkValidity();
@@ -627,12 +649,11 @@
 										_ReactProps.className = _ReactProps.className.trimLeft();
 									}
 									
-									/**
-									 * TODO - Deal with radios
-									 */
+									// Since radio shares the same name, just check if radio value matches clicked value
 									if (child.type === 'input' && child.props.type === 'radio') {
-										_ReactProps.checked = (_ReactProps.value === child.props.value);
-										console.log(_ReactProps);
+										_ReactProps = {
+											checked: (_ReactProps.value === child.props.value)
+										};
 									}
 
 									if (_ReactProps.value !== '' && _RAWdata.valid !== false) {

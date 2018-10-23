@@ -1,0 +1,745 @@
+
+<!doctype html>
+
+<html lang="en">
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Form</title>
+
+        <script src="external/react.development.js"></script>
+        <script src="external/react-dom.development.js"></script>
+		<script src="external/babel.min.js"></script>
+		<link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.4.1/cropper.min.css" rel="stylesheet">
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.4.1/cropper.min.js"></script>
+		<!--
+        <script src="https://unpkg.com/react@16/umd/react.development.js"></script>
+        <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"></script>
+        <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
+		-->
+		<style>
+			*,
+			*::before,
+			*::after {
+				box-sizing: border-box;
+			}
+
+			html,
+			body,
+			#root {
+				font-family: Arial;
+				margin: 0 auto;
+				padding: 0;
+				max-width: 840px;
+				width: 100%;
+			}
+
+			body {
+				padding: 20px;
+			}
+
+			form > div {
+				margin-bottom: 10px;
+			}
+
+			.progress {
+				display: flex;
+			}
+
+			.progress > div:first-child {
+				width: calc(100% - 100px);
+				height: 6px;
+				border-radius: 3px;
+				background-color: #ccc;
+				margin-top: 6px;
+			}
+
+			.progress > div:first-child span {
+				display: block;
+				background-color: #4bde8b;
+				border-radius: 3px;
+				height: 100%;
+				transition: 0.1s linear width;
+			}
+
+			.progress > div:last-child{
+				width: 100px;
+				text-align: center;
+			}
+
+			label {
+				margin-right: 6px;
+			}
+
+			input:not([type="checkbox"]):not([type="radio"]) {
+				border: 2px solid #ccc;
+				border-radius: 4px;
+				-webkit-appearance: none;
+				padding: 4px 6px;
+				margin-right: 10px;
+			}
+
+			.form-error {
+				background-color: rgba(255, 0, 0, 0.2);
+				border-radius: 4px;
+				border: 2px solid red;
+				display: inline-block;
+				margin-left: 6px;
+				padding: 4px;
+			}
+
+			.invalid {
+				background-color: rgba(255, 0, 0, 0.2);
+				box-shadow: 0 0 0 2px red;
+			}
+
+			.valid:not(:focus) {
+				background-color: #edfcf4;
+				border-color: #4bde8b;
+			}
+
+			.seen:not(:focus) {
+				box-shadow: 0 0 0 2px yellow;
+			}
+
+			img {
+				background-color: #ccc;
+			}
+		</style>
+
+	</head>
+
+	<body>
+		<div id="root"></div>
+
+		<script>
+			/**
+			 * Deep merge two objects.
+			 * @param target
+			 * @param ...sources
+			 */
+			function mergeDeep(target, ...sources) {
+				if (!sources.length) return target;
+
+				/**
+				 * Simple object check.
+				 * @param item
+				 * @returns {boolean}
+				 */
+				function isObject(item) {
+					return (item && typeof item === 'object' && !Array.isArray(item));
+				}
+
+				const source = sources.shift();
+
+				if (isObject(target) && isObject(source)) {
+					for (const key in source) {
+						if (isObject(source[key])) {
+							if (!target[key]) Object.assign(target, { [key]: {} });
+							mergeDeep(target[key], source[key]);
+						} else {
+							Object.assign(target, { [key]: source[key] });
+						}
+					}
+				}
+
+				return mergeDeep(target, ...sources);
+			}
+		</script>
+
+		<script type="text/babel">
+            class Page extends React.Component {
+                constructor(props) {
+					super(props);
+
+					this.update = this.update.bind(this);
+
+					this.state = {
+						progress: {},
+						persistEvents: true,
+						loading: true
+					};
+				}
+				
+				update(e, data) {
+					console.log(`%c${e.type} event`, 'font-weight: bold; text-decoration: underline; text-transform: capitalize; ', 'Sending to API =>', data);
+
+					this.setState({
+						progress: data.progress
+					});
+				}
+
+				async componentDidMount() {
+					let offer = await fetch('/offer.json')
+										.then(resp => resp.json())
+										.then((offer) => {
+											console.log(offer);
+											this.setState({
+												loading: false,
+												offer: offer
+											});
+										});
+				}
+
+				render() {
+
+					if (this.state.loading) {
+						return (
+							<div className="loading">
+								Loading...
+							</div>
+						);
+					}
+
+					return (
+						<React.Fragment>
+							<div className="progress">
+								<div><span style={{width: `${this.state.progress.percentage || 0}%`}}></span></div>
+								<div>{this.state.progress.completed} / {this.state.progress.total}</div>
+							</div>	
+							<Form
+								//update={this.update}
+								onMount={this.update}
+								onBlur={this.update}
+								onChange={this.update}
+								onFocus={this.update}
+								persistEvents={this.state.persistEvents} // Has a performance impact, only use if you need event data
+								visible={true}
+							>	
+								<React.Fragment>
+									<h2>Basic details</h2>
+									<h4>Does your car have any of these features?</h4>
+									<Fieldset name="equipment" serialization="array">
+										<input id="equipment_0" type="checkbox" value="sat_nav"/><label htmlFor="equipment_0">Sat nav</label>
+										<input id="equipment_1" type="checkbox" value="panoramic_roof"/><label htmlFor="equipment_1">Panoramic roof / sun roof</label>
+										<input id="equipment_2" type="checkbox" value="heated_seats"/><label htmlFor="equipment_2">Heated seats</label>
+										<input id="equipment_3" type="checkbox" value="parking_cam"/><label htmlFor="equipment_3">Rear parking camera</label>
+										<input id="equipment_4" type="checkbox" value="sound_system"/><label htmlFor="equipment_4">Upgraded sound system</label>
+									</Fieldset>
+
+									<h4>What colour are the seats?</h4>
+									<label>
+										<select name="seat_color">
+											<option value="" disabled="">Select a colour</option>
+											<option name="White" value="white">White</option>
+											<option name="Cream" value="cream">Cream</option>
+											<option name="Tan" value="tan">Tan</option>
+											<option name="Brown" value="brown">Brown</option>
+											<option name="Black" value="black">Black</option>
+											<option name="Grey" value="grey">Grey</option>
+											<option name="Black &amp; blue" value="blackblue">Black &amp; blue</option>
+											<option name="Black &amp; red" value="blackred">Black &amp; red</option>
+											<option name="Black &amp; white" value="blackwhite">Black &amp; white</option>
+											<option name="Black &amp; grey" value="blackgrey">Black &amp; grey</option>
+											<option name="Red" value="red">Red</option>
+											<option name="Blue" value="blue">Blue</option>
+											<option name="Other" value="other">Other</option>
+										</select>
+									</label>
+
+									<h4>How are they upholstered?</h4>
+									<label className="select">
+										<select name="seat_fabric">
+											<option value="" disabled="">Select fabric</option>
+											<option value="leather">Leather</option>
+											<option value="leather_half">Half leather</option>
+											<option value="cloth">Cloth</option>
+											<option value="suede">Suede</option>
+											<option value="suede_half">Half suede</option>
+										</select>
+									</label>
+
+									<h4>Do you have two working keys for the car?</h4>
+									<input id="num_keys_0___0" type="radio" name="num_keys0" value="2"/>
+									<label for="num_keys_0___0">Yes</label>
+									<input id="num_keys_1___0" type="radio" name="num_keys0" value="none"/>
+									<label for="num_keys_1___0">No</label>
+									<Conditional
+											name="num_keys0"
+											condition={(input) => {
+												return (input.checked && input.value === 'none');
+											}}
+										>
+										<h4>How many working keys do you have?</h4>
+										<input id="num_keys_0___1" type="radio" name="num_keys1" value="0"/>
+										<label for="num_keys_0___1">None</label>
+										<input id="num_keys_1___1" type="radio" name="num_keys1" value="1"/>
+										<label for="num_keys_1___1">1</label>
+										<input id="num_keys_2___1" type="radio" name="num_keys1" value="3"/>
+										<label for="num_keys_2___1">3+</label>
+									</Conditional>
+
+									<h4>Do you have the V5C logbook?</h4>
+									<input id="logbook_0" type="radio" name="logbook" value="true" />
+									<label htmlFor="logbook_0">Yes</label>
+									<input id="logbook_1" type="radio" name="logbook" value="false" />
+									<label htmlFor="logbook_1">No</label>
+									<Conditional
+											name="logbook"
+											condition={(input) => {
+												return (input.checked && input.value === 'true');
+											}}
+										>
+										<h4>Is the V5C logbook in your name?</h4>
+										<input id="logbook_self_0" type="radio" name="logbook_self" value="true" />
+										<label htmlFor="logbook_self_0">Yes</label>
+										<input id="logbook_self_1" type="radio" name="logbook_self" value="false" />
+										<label htmlFor="logbook_self_2">No</label>
+									</Conditional>
+
+									<h4>Do you have the book pack?</h4>
+									<input id="book_pack_0" type="radio" name="book_pack" value="true"/>
+									<label for="book_pack_0">Yes</label>
+									<input id="book_pack_1" type="radio" name="book_pack" value="false"/>
+									<label for="book_pack_1">No</label>
+								</React.Fragment>
+							</Form>
+						</React.Fragment>
+					);
+				}
+			}
+		</script>
+
+		<script type="text/babel">
+			class Form extends React.Component {
+				constructor(props) {
+					super(props);
+
+					window.thisForm = this;
+
+					this.$form = React.createRef();
+
+					this.onBlur = this.onBlur.bind(this);
+					this.onChange = this.onChange.bind(this);
+					this.onFocus = this.onFocus.bind(this);
+					this.onSubmit = this.onSubmit.bind(this);
+
+					this._ParseDom = this._ParseDom.bind(this);
+					this._getDOMAttributes = this._getDOMAttributes.bind(this);
+					this._getReactProps = this._getReactProps.bind(this);
+					//
+					this.updateModel = this.updateModel.bind(this);
+					this.onUpdate = this.onUpdate.bind(this);
+					this.report = this.report.bind(this);
+
+					this._DOM = {};
+					this._ReactDOM = {};
+
+					this._formElementTypes = [
+						//'button',
+						//'datalist',
+						'fieldset',
+						'form',
+						'input',
+						'keygen',
+						//'label',
+						'legend',
+						'meter',
+						//'optgroup',
+						//'option',
+						'output',
+						'progress',
+						'select',
+						'textarea'
+					];
+
+					this.state = {
+						seen: {}
+					};
+
+					this.__Model = {};
+				}
+
+				_ParseDom() {
+					let $form = this.$form.current;
+					let $elements = [...$form.elements];
+
+					$elements.forEach($el => {
+						let attributes = this._getDOMAttributes($el);
+						this._DOM = this.updateModel(attributes['name'], attributes, this._DOM);
+					});
+				}
+
+				_getDOMAttributes($el) {
+					let attributes = {};
+					let attrs = $el.attributes;
+					for(var i = attrs.length - 1; i >= 0; i--) {
+						attributes[attrs[i].name] = attrs[i].value;
+					}
+
+					attributes['checked'] = $el.checked;
+					attributes['value'] = $el.value;
+
+					return attributes;
+				}
+
+				_getReactProps($el, parentProps) {
+					if (this._formElementTypes.includes($el.type)) {
+						let attributes = {
+							checked: false,
+							type: $el.type,
+							value: $el.props.defaultValue || '',
+							...$el.props,
+							...parentProps || {}
+						}
+
+						return attributes;
+					}
+				}
+
+				_parseDOMAttributesToReactProps(dom) {
+					/**
+					 * `required` attribute comes back as `required === ''`
+					 */
+					dom.required = (dom.required != null) ? true : dom.required;
+					return dom;
+				}
+
+				componentDidMount() {
+					if (this.props.onMount) { this.props.onMount({type: 'mount'}, this.report())}
+				}
+
+				onBlur(e) {
+					if (this.props.persistEvents) { e.persist(); }
+
+					this.setState({
+						$focused: null
+					});
+
+					if (this.props.onBlur) { this.props.onBlur(e, this.report()); }
+				}
+
+				onFocus(e) {
+					if (this.props.persistEvents) { e.persist(); }
+
+					this.setState({
+						seen: {...this.state.seen, [e.target.name]: true},
+						$focused: e.target
+					});
+
+					if (this.props.onFocus) { this.props.onFocus(e, this.report()); }
+				}
+
+				onChange(e) {
+					if (this.props.persistEvents) { e.persist(); }
+
+					//this._DOM = this.updateModel(e.target.name, this._getDOMAttributes(e.target), this._DOM);
+					let DOMAttributes = this._parseDOMAttributesToReactProps(this._getDOMAttributes(e.target));
+					DOMAttributes.HTMLvalid = e.target.checkValidity();
+
+					let name = this.generateFetchName(DOMAttributes);
+
+					if (!name) {
+						console.error(`Element \`${DOMAttributes.type}\` does not have a name or id`, DOMAttributes);
+						return;
+					}
+
+					this.__Model = this.updateModel(name, mergeDeep(this.__resolveModelPath(name, this.__Model), DOMAttributes), this.__Model);
+
+					this.setState({
+						model: this.__Model
+					}, () => {
+						this.onUpdate();
+						if (this.props.onChange) { this.props.onChange(e, this.report()); }
+					});
+				}
+
+				onSubmit(e) {
+					if (this.props.persistEvents) { e.persist(); }
+
+					e.preventDefault();
+
+					if (this.props.onSubmit) { this.props.onSubmit(e, this.report()); }
+				}
+
+				onUpdate() {
+					if (this.props.update) { this.props.update(null, this.report()); }
+				}
+
+				report() {
+					return {
+						data: this.__Model,
+						progress: this._progress
+					};
+				}
+
+				generateFetchName = (_ReactProps) => {
+					//let name = (_ReactProps.type === 'radio') ? `${_ReactProps.name}-${_ReactProps.value}` : _ReactProps.name;
+					let name = _ReactProps.name || _ReactProps.id;
+
+					return name;
+				}
+
+				render() {
+					let formElements = [];
+					let completedFormElements = 0;
+
+					let updateModel = (_ReactProps) => {
+						if (!_ReactProps) { return; }
+						
+						let name = this.generateFetchName(_ReactProps);
+
+						let existingModel = getModel(_ReactProps);
+
+						if (Object.keys(existingModel || {}).length > 0) { return; }
+
+						if (!name) {
+							console.error(`Element \`${_ReactProps.type}\` does not have a name or id`, _ReactProps);
+							return;
+						}
+
+						// Remove anything not needed
+						let {children, ..._Props} = _ReactProps;
+
+						this.updateModel(name, _Props, this.__Model);
+					};
+
+					let getModel = (_ReactProps) => {
+						if (!_ReactProps) { return; }
+
+						let name = this.generateFetchName(_ReactProps);
+
+						return this.__resolveModelPath(name, this.__Model) || {};
+					};
+
+					let generateModel = (children, mergeParentProps) => {
+						// Traverse through all children with pretty functional way :-)
+						return React.Children.map(children, (child) => {
+							// This is support for non-node elements (eg. pure text), they have no props
+							if (!child || !child.props) {
+								return child;
+							}
+							
+							let _ReactProps = this._getReactProps(child, mergeParentProps);
+
+							// If current component has additional children, traverse through them as well!
+							if (child.props.children) {
+								let parentProps = {};
+
+								// Don't care about error or conditionals here, just parse the children, find form elements
+								
+								// Get the fieldset and assign it to the child
+								if (child.type === Fieldset) {
+									parentProps = Object.assign(mergeParentProps || {}, {
+										fieldset: child.props.name,
+										serialization: child.props.serialization
+									});
+								}
+
+								updateModel(_ReactProps);
+								generateModel(child.props.children, parentProps)
+								return;
+							}
+
+							updateModel(_ReactProps);
+						});
+					}
+
+					let renderWrappedChildren = (children) => {
+						// Traverse through all children with pretty functional way :-)
+						return React.Children.map(children, (child) => {
+							
+							// This is support for non-node elements (eg. pure text), they have no props
+							if (!child || !child.props) {
+								return child;
+							}
+
+							let _ReactProps = this._getReactProps(child);
+							let _values = getModel(_ReactProps);
+							let inputState = {};
+							let customProps = {};
+
+							if (_values) {
+								// Do something if need be
+
+								if (child.type === 'input' && child.props.type === 'radio') {
+									inputState.checked = (inputState.checked && inputState.value === child.props.value);
+								} else {
+									inputState.value = _values.value;
+									inputState.checked = _values.checked;
+								}
+							}
+
+							if (child.type === Error || child.type === Conditional) {
+								let _values = getModel({
+									name: child.props.name
+								});
+
+								customProps.input = _values || {};
+							}
+
+							// If current component has additional children, traverse through them as well!
+							if (child.props.children) {
+								// You have to override also children here
+								return React.cloneElement(child, {
+									children: renderWrappedChildren(child.props.children),
+									onChange: child.props.onChange || (() => {}),
+									...customProps
+								});
+							}
+
+							// Return new component with overridden `onChange` callback
+							return React.cloneElement(child, {
+								onChange: child.props.onChange || (() => {}),
+								...customProps,
+								...inputState
+							});
+						});
+					}
+					
+					let time = performance.now();
+					
+					let children;
+
+					if (this.props.children) {
+						generateModel(this.props.children);
+						children = renderWrappedChildren(this.props.children);
+						console.log(`Render time: ${Math.round(performance.now() - time)}ms`);
+					}
+
+					this._progress = {
+						total: formElements.length,
+						completed: completedFormElements,
+						percentage: Math.round((completedFormElements / formElements.length) * 100)
+					};
+					
+					// Remove any reserved props such as update
+					let {update, persistEvents, onMount, visible, ...props} = this.props;
+
+					if (!this.props.children || this.props.visible === false) {
+						return (null);
+					}
+
+					return (
+						<form
+							ref={this.$form}
+							{...props}
+							onChange={this.onChange}
+							onFocus={this.onFocus}
+							onBlur={this.onBlur}
+							onSubmit={this.onSubmit}
+							//onInvalid={this.onChange}
+						>
+							{ children }
+						</form>
+					);
+				}
+
+				updateModel(path='', value, obj={}, separator='.') {
+					var properties = Array.isArray(path) ? path : path.split(separator);
+
+					properties.reduce((prev, curr, i) => {
+						if (!prev[curr]) { prev[curr] = {}; }
+						if (i === properties.length - 1) { prev[curr] = value; }
+						return prev && prev[curr];
+					}, obj);
+
+					return obj;
+				}
+
+				__resolveModelPath(path='', obj=self, separator='.') {
+					var properties = Array.isArray(path) ? path : path.split(separator);
+					if (properties[0] === 'fieldset') { properties.shift(); }
+					return properties.reduce((prev, curr) => prev && prev[curr], obj)
+				}
+			}
+		</script>
+
+		<script type="text/babel">
+			class Fieldset extends React.Component {
+				constructor(props) {
+					super(props);
+				}
+
+				render() {
+					return (
+						<fieldset
+							{...this.props}
+						>
+							{
+								React.Children.map(this.props.children, (child) => {
+									return React.cloneElement(child, {
+										key: `${this.props.name}-${child.props.name}`,
+										fieldset: this.props.name
+									});
+								})
+							}
+						</fieldset>
+					);
+				}
+			}
+		</script>
+		<script type="text/babel">
+			class Error extends React.Component {
+				constructor(props) {
+					super(props);
+				}
+
+				render() {
+					let show, valid;
+
+					if (typeof this.props.validate !== 'function') { console.warn(`Provide a \`validate\` function for "${this.props.input.name}" with value "${this.props.input.value}"`); }
+					if (this.props.input.value == null) { console.warn(`Provide a valid value for "${this.props.input.name}"`); }
+					
+					try {
+						valid = this.props.validate(this.props.input.value);
+					} catch(e) {
+						console.error(e);
+
+						return (null);
+					}
+
+					if (typeof valid !== 'boolean') {
+						console.warn(`Provide \`<Error/>\` component for "${this.props.input.name}" with value "${this.props.input.value}", a validation function which returns a boolean.`);
+					}
+
+					show = (this.props.validate(this.props.input.value) === false) ? (
+						<div className='form-error'>{this.props.message || this.props.children}</div>
+					) : (null);
+
+					return show;
+				}
+			}
+		</script>
+		<script type="text/babel">
+			class Conditional extends React.Component {
+				constructor(props) {
+					super(props);
+				}
+
+				render() {
+					let show, valid;
+
+					if (this.props.__FormModelMapping) {
+						valid = true;
+					} else {
+						if (typeof this.props.condition !== 'function') { console.warn(`Provide a \`condition\` function for "${this.props.input.name}" with value "${this.props.input.value}"`); }
+						if (this.props.input.value == null) { console.warn(`Provide a valid value for "${this.props.input.name}"`); }
+
+						try {
+							valid = this.props.condition(this.props.input);
+						} catch(e) {
+							console.error(e);
+
+							return (null);
+						}
+
+						if (typeof valid !== 'boolean') {
+							console.warn(`Provide \`<Conditional/>\` component for "${this.props.input.name}" with value "${this.props.input.value}", a \`condition\` function which returns a boolean.`);
+						}
+					}
+
+					show = (valid === true) ? (
+						<React.Fragment>
+							{this.props.children}
+						</React.Fragment>
+					) : (null);
+
+					return show;
+				}
+			}
+		</script>
+		<script type="text/babel">
+			ReactDOM.render(<Page />, document.getElementById("root"));
+		</script>
+	</body>
+</html>
