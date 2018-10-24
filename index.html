@@ -210,7 +210,7 @@
 								<div>
 									<label htmlFor="title">Title</label>
 									<input type="text" id="title" name="movie.title" onChange={(e => {
-										e.currentTarget.value = e.currentTarget.value.replace(/^\w/, c => c.toUpperCase());
+										e.currentTarget.value = e.currentTarget.value.toUpperCase();
 									})}/>
 								</div>
 								

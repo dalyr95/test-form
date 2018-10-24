@@ -250,9 +250,9 @@
 
 									<h4>Do you have two working keys for the car?</h4>
 									<input id="num_keys_0___0" type="radio" name="num_keys0" value="2"/>
-									<label for="num_keys_0___0">Yes</label>
+									<label htmlFor="num_keys_0___0">Yes</label>
 									<input id="num_keys_1___0" type="radio" name="num_keys0" value="none"/>
-									<label for="num_keys_1___0">No</label>
+									<label htmlFor="num_keys_1___0">No</label>
 									<Conditional
 											name="num_keys0"
 											condition={(input) => {
@@ -261,11 +261,11 @@
 										>
 										<h4>How many working keys do you have?</h4>
 										<input id="num_keys_0___1" type="radio" name="num_keys1" value="0"/>
-										<label for="num_keys_0___1">None</label>
+										<label htmlFor="num_keys_0___1">None</label>
 										<input id="num_keys_1___1" type="radio" name="num_keys1" value="1"/>
-										<label for="num_keys_1___1">1</label>
+										<label htmlFor="num_keys_1___1">1</label>
 										<input id="num_keys_2___1" type="radio" name="num_keys1" value="3"/>
-										<label for="num_keys_2___1">3+</label>
+										<label htmlFor="num_keys_2___1">3+</label>
 									</Conditional>
 
 									<h4>Do you have the V5C logbook?</h4>
@@ -288,9 +288,9 @@
 
 									<h4>Do you have the book pack?</h4>
 									<input id="book_pack_0" type="radio" name="book_pack" value="true"/>
-									<label for="book_pack_0">Yes</label>
+									<label htmlFor="book_pack_0">Yes</label>
 									<input id="book_pack_1" type="radio" name="book_pack" value="false"/>
-									<label for="book_pack_1">No</label>
+									<label htmlFor="book_pack_1">No</label>
 								</React.Fragment>
 							</Form>
 						</React.Fragment>
@@ -456,8 +456,10 @@
 				}
 
 				report() {
+					let model = JSON.parse(JSON.stringify(this.__Model));
+
 					return {
-						data: this.__Model,
+						data: model,
 						progress: this._progress
 					};
 				}
