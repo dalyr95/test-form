@@ -478,7 +478,7 @@
 							let arr;
 							if (useChecked) {
 								if (model.checked) {
-									fieldset.push(name);
+									fieldset.push(model.value);
 									arr = fieldset;
 								} else {
 									arr = fieldset.filter(f => (f !== name));
@@ -555,14 +555,32 @@
 						let name = this.generateFetchName(_ReactProps);
 
 						if (_ReactProps.fieldset) {
-							/**
-							 * TODO - Deal with fieldsets
-							 */
+							let fieldset = this.__resolveModelPath(_ReactProps.fieldset, hydrateData);
+							let model = getModel(_ReactProps);
+
+							if (Array.isArray(fieldset)) {
+								// Assuming fieldset arrays would be checkboxes as it's a boolean essentially
+								fieldset.forEach(f => {
+									if (_ReactProps.value === f) {
+										model.checked = true;
+									}
+								});
+							} else {
+								Object.entries(fieldset).forEach(([key, value]) => {
+									if (name === key) {
+										model.value = value;
+										if (['radio', 'checkbox'].includes(model.type)) {
+											model.checked = true;
+										}
+									}
+								})
+							}
 						} else {
 							let model = getModel(_ReactProps);
 
 							/**
 							 * TODO - Should we add to model anyway???
+							 * Could be picked up on a later DOM run
 							 */
 							if (!model) { return; }
 
