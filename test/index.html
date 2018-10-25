@@ -1,0 +1,837 @@
+
+<!doctype html>
+
+<html lang="en">
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <script src="external/react.development.js"></script>
+        <script src="external/react-dom.development.js"></script>
+		<script src="external/babel.min.js"></script>
+		<link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.4.1/cropper.min.css" rel="stylesheet">
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.4.1/cropper.min.js"></script>
+		<!--
+        <script src="https://unpkg.com/react@16/umd/react.development.js"></script>
+        <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"></script>
+        <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
+		-->
+		<style>
+			*,
+			*::before,
+			*::after {
+				box-sizing: border-box;
+			}
+
+			html,
+			body,
+			#root {
+				font-family: Arial;
+				margin: 0 auto;
+				padding: 0;
+				max-width: 840px;
+				width: 100%;
+			}
+
+			body {
+				padding: 20px;
+			}
+
+			form > div {
+				margin-bottom: 10px;
+			}
+
+			.progress {
+				display: flex;
+			}
+
+			.progress > div:first-child {
+				width: calc(100% - 100px);
+				height: 6px;
+				border-radius: 3px;
+				background-color: #ccc;
+				margin-top: 6px;
+			}
+
+			.progress > div:first-child span {
+				display: block;
+				background-color: #4bde8b;
+				border-radius: 3px;
+				height: 100%;
+				transition: 0.1s linear width;
+			}
+
+			.progress > div:last-child{
+				width: 100px;
+				text-align: center;
+			}
+
+			label {
+				margin-right: 6px;
+			}
+
+			input:not([type="checkbox"]):not([type="radio"]) {
+				border: 2px solid #ccc;
+				border-radius: 4px;
+				-webkit-appearance: none;
+				padding: 4px 6px;
+				margin-right: 10px;
+			}
+
+			.form-error {
+				background-color: rgba(255, 0, 0, 0.2);
+				border-radius: 4px;
+				border: 2px solid red;
+				display: inline-block;
+				margin-left: 6px;
+				padding: 4px;
+			}
+
+			.invalid {
+				background-color: rgba(255, 0, 0, 0.2);
+				box-shadow: 0 0 0 2px red;
+			}
+
+			.valid:not(:focus) {
+				background-color: #edfcf4;
+				border-color: #4bde8b;
+			}
+
+			.seen:not(:focus) {
+				box-shadow: 0 0 0 2px yellow;
+			}
+
+			img {
+				background-color: #ccc;
+			}
+		</style>
+
+	</head>
+
+	<body>
+		<div id="root"></div>
+
+		<script>
+			/**
+			 * Deep merge two objects.
+			 * @param target
+			 * @param ...sources
+			 */
+			function mergeDeep(target, ...sources) {
+				if (!sources.length) return target;
+
+				/**
+				 * Simple object check.
+				 * @param item
+				 * @returns {boolean}
+				 */
+				function isObject(item) {
+					return (item && typeof item === 'object' && !Array.isArray(item));
+				}
+
+				const source = sources.shift();
+
+				if (isObject(target) && isObject(source)) {
+					for (const key in source) {
+						if (isObject(source[key])) {
+							if (!target[key]) Object.assign(target, { [key]: {} });
+							mergeDeep(target[key], source[key]);
+						} else {
+							Object.assign(target, { [key]: source[key] });
+						}
+					}
+				}
+
+				return mergeDeep(target, ...sources);
+			}
+		</script>
+
+		<script type="text/babel">
+            class Page extends React.Component {
+                constructor(props) {
+					super(props);
+
+					this.update = this.update.bind(this);
+
+					this.state = {
+						progress: {},
+						persistEvents: true,
+						loading: true
+					};
+				}
+				
+				update(e, data) {
+					console.log(`%c${e.type} event`, 'font-weight: bold; text-decoration: underline; text-transform: capitalize; ', 'Sending to API =>', data);
+
+					this.setState({
+						progress: data.progress
+					});
+				}
+
+				async componentDidMount() {
+					let offer = await fetch('/offer.json')
+										.then(resp => resp.json())
+										.then((offer) => {
+											console.log(offer);
+											this.setState({
+												loading: false,
+												offer: offer
+											});
+										});
+				}
+
+				render() {
+
+					if (this.state.loading) {
+						return (
+							<div className="loading">
+								Loading...
+							</div>
+						);
+					}
+
+					return (
+						<React.Fragment>
+							<div className="progress">
+								<div><span style={{width: `${this.state.progress.percentage || 0}%`}}></span></div>
+								<div>{this.state.progress.completed} / {this.state.progress.total}</div>
+							</div>	
+							<Form
+								//update={this.update}
+								onMount={this.update}
+								onBlur={this.update}
+								onChange={this.update}
+								onFocus={this.update}
+								persistEvents={this.state.persistEvents} // Has a performance impact, only use if you need event data
+								visible={true}
+							>
+
+								<h4>Movie</h4>
+								<p>Describe your movie</p>
+								<div>
+									<label htmlFor="title">Title</label>
+									<input type="text" id="title" name="movie.title" onChange={(e => {
+										e.currentTarget.value = e.currentTarget.value.toUpperCase();
+									})}/>
+								</div>
+								
+								<Conditional
+										name="movie.title"
+										condition={(value) => {
+											return (value.toLowerCase() === 'avengers');
+										}}
+									>
+										<select name="hidden.whatever">
+											<option value="The Avengers">The Avengers</option>
+											<option value="Avengers: Age of Ultron">Avengers: Age of Ultron</option>
+											<option value="Avengers: Infinity War">Avengers: Infinity War</option>
+											<option value="Avengers 4">The Avengers 4</option>
+										</select>
+								</Conditional>
+
+								<div>
+									<label htmlFor="star">Star</label>
+									<input type="text" id="star" name="movie.star" />
+									<Error 
+										name="movie.star"
+										validate={(value) => {
+											return value === 'scarjo'
+										}}
+									>
+										<span>
+											<img src="https://pa1.narvii.com/6658/6a551ca46768479feb8c1317e33a821667c912bd_128.gif" style={{height: '20px', width: '20px', backgroundColor: 'red', float: 'left', marginRight: '6px'}}/>
+											You know the answer is `scarjo`
+										</span>
+									</Error>
+								</div>
+								
+								<div>
+									<h4>Validate on blur</h4>
+									<label htmlFor="year">Year</label>
+									<input type="number" id="year" name="movie.year" required pattern="[0-9]*" />
+									
+									<label htmlFor="genre">Genre</label>
+									<select name="movie.genre" value="thriller">
+										<option value="">--Please choose an option--</option>
+										<option value="action">Action</option>
+										<option value="thriller">Thriller</option>
+										<option value="romcom">RomCom</option>
+									</select>
+								</div>
+								
+								<div>
+									<label htmlFor="crap">Crap</label>
+									<input type="checkbox" id="crap" checked name="crap" value="poo" />
+								</div>
+
+								<div>
+									<Error
+										name="scarjo"
+										validate={(value) => {
+											return (value.length === 0 || value === 'beer');
+										}}
+									>
+										<div>You know the answer is `beer`</div>
+									</Error>
+									<hr/>
+									<textarea name="scarjo" placeholder="I need a beer"></textarea>
+								</div>
+
+								<div>
+									<h4>Conditions</h4>
+									<label htmlFor="email1">Email</label>
+									<input type="email" id="email1" name="email1" value="" required />
+
+									<Conditional
+										name="email1"
+										condition={(value) => {
+											return (value === 'secret');
+										}}
+									>
+										<div>
+											<p>Hey ho! You've unlocked a secret Scarjo!!</p>
+											<p>
+												<label htmlFor="email1">Email 1</label>
+												<input type="email" id="email2" name="email2" value="" required />
+											</p>
+											<p>
+												<img src="http://1.bp.blogspot.com/-dGug9bgZ8a0/UkTzk5F5OlI/AAAAAAAAggI/6mf7TvC20ZE/s1600/Scarlett+(4).jpg" style={{maxWidth: '100%'}}/>
+											</p>
+										</div>
+									</Conditional>
+								</div>
+
+								<Fieldset name="movie.categories" serialization="array">
+									<div>
+										<h4>Fieldsets - Array</h4>
+										<label htmlFor="movie.categories.1">Categories</label>
+										<input type="text" id="movie.categories.1" name="movie.categories.1" />
+										
+										<label htmlFor="movie.categories.2">Categories</label>
+										<input type="text" id="movie.categories.2" name="movie.categories.2"/>
+									</div>
+								</Fieldset>
+
+								<Fieldset name="movie.things">
+									<div>
+										<h4>Fieldsets - Object</h4>
+										<label htmlFor="movie.things.1">Categories</label>
+										<input type="text" id="movie.things.1" name="movie.things.1" />
+										
+										<label htmlFor="movie.things.2">Categories</label>
+										<input type="text" id="movie.things.2" name="movie.things.2"/>
+									</div>
+								</Fieldset>
+
+									<legend>Select a maintenance drone</legend>
+
+									<div>
+										<input type="radio" id="huey" name="drone" value="huey" checked={true} />
+										<label htmlFor="huey">Huey</label>
+									</div>
+
+									<div>
+										<input type="radio" id="dewey" name="drone" value="dewey" checked={false}/>
+										<label htmlFor="dewey">Dewey</label>
+									</div>
+
+
+							</Form>
+						</React.Fragment>
+					);
+				}
+			}
+		</script>
+
+		<script type="text/babel">
+			class Form extends React.Component {
+				constructor(props) {
+					super(props);
+
+					window.thisForm = this;
+
+					this.$form = React.createRef();
+
+					this.onBlur = this.onBlur.bind(this);
+					this.onChange = this.onChange.bind(this);
+					this.onFocus = this.onFocus.bind(this);
+					this.onSubmit = this.onSubmit.bind(this);
+
+					this._ParseDom = this._ParseDom.bind(this);
+					this._getDOMAttributes = this._getDOMAttributes.bind(this);
+					this._getReactProps = this._getReactProps.bind(this);
+					//
+					this.updateModel = this.updateModel.bind(this);
+					this.onUpdate = this.onUpdate.bind(this);
+					this.report = this.report.bind(this);
+
+					this._initial = true;
+
+					this._DOM = {};
+					this._ReactDOM = {};
+
+					this._formElementTypes = [
+						'button',
+						'datalist',
+						'fieldset',
+						'form',
+						'input',
+						'keygen',
+						'label',
+						'legend',
+						'meter',
+						//'optgroup',
+						//'option',
+						'output',
+						'progress',
+						'select',
+						'textarea'
+					];
+
+					this.state = {
+						seen: {}
+					};
+
+					/**
+					 * TODO - Find a way to replace this.state._ReactDOM || this._ReactDOM;
+					 */
+				}
+
+				_ParseDom() {
+					let $form = this.$form.current;
+					let $elements = [...$form.elements];
+
+					$elements.forEach($el => {
+						let attributes = this._getDOMAttributes($el);
+						this._DOM = this.updateModel(attributes['name'], attributes, this._DOM);
+					});
+				}
+
+				_getDOMAttributes($el) {
+					let attributes = {};
+					let attrs = $el.attributes;
+					for(var i = attrs.length - 1; i >= 0; i--) {
+						attributes[attrs[i].name] = attrs[i].value;
+					}
+
+					attributes['checked'] = $el.checked;
+					attributes['value'] = $el.value;
+
+					return attributes;
+				}
+
+				_getReactProps($el) {
+					if (this._formElementTypes.includes($el.type)) {
+						let attributes = {
+							checked: false,
+							type: $el.type,
+							value: $el.props.defaultValue || '',
+							...$el.props
+						}
+
+						return attributes;
+					}
+				}
+
+				_parseDOMAttributesToReactProps(dom) {
+					/**
+					 * `required` attribute comes back as `required === ''`
+					 */
+					dom.required = (dom.required != null) ? true : dom.required;
+					return dom;
+				}
+
+				componentDidMount() {
+					if (this.props.onMount) { this.props.onMount({type: 'mount'}, this.report())}
+				}
+
+				onBlur(e) {
+					if (this.props.persistEvents) { e.persist(); }
+
+					this.setState({
+						$focused: null
+					});
+
+					if (this.props.onBlur) { this.props.onBlur(e, this.report()); }
+				}
+
+				onFocus(e) {
+					if (this.props.persistEvents) { e.persist(); }
+
+					this.setState({
+						seen: {...this.state.seen, [e.target.name]: true},
+						$focused: e.target
+					});
+
+					if (this.props.onFocus) { this.props.onFocus(e, this.report()); }
+				}
+
+				onChange(e) {
+					if (this.props.persistEvents) { e.persist(); }
+					console.log(e.target.name, e.target.value);
+					//this._DOM = this.updateModel(e.target.name, this._getDOMAttributes(e.target), this._DOM);
+					let DOMAttributes = this._parseDOMAttributesToReactProps(this._getDOMAttributes(e.target));
+					DOMAttributes.HTMLvalid = e.target.checkValidity();
+
+					this._ReactDOM = this.updateModel(e.target.name, mergeDeep(this.__resolveModelPath(e.target.name, this._ReactDOM), DOMAttributes), this._ReactDOM);
+
+					this.setState({
+						_ReactDOM: this._ReactDOM
+					}, () => {
+						this.onUpdate();
+						if (this.props.onChange) { this.props.onChange(e, this.report()); }
+					});
+				}
+
+				onSubmit(e) {
+					if (this.props.persistEvents) { e.persist(); }
+
+					e.preventDefault();
+
+					if (this.props.onSubmit) { this.props.onSubmit(e, this.report()); }
+				}
+
+				onUpdate() {
+					if (this.props.update) { this.props.update(null, this.report()); }
+				}
+
+				report() {
+					return {
+						data: this._valueModel,
+						progress: this._progress
+					};
+				}
+
+				render() {
+					this._valueModel = {};
+					this._valueModelRaw = {};
+
+					let formElements = [];
+					let completedFormElements = 0;
+
+					let firstPass = true;
+
+					let renderWrappedChildren = (children, mergeParentProps) => {
+						// Traverse through all children with pretty functional way :-)
+						return React.Children.map(children, (child, i) => {
+							// This is support for non-node elements (eg. pure text), they have no props
+							if (!child || !child.props) {
+								return child;
+							}
+
+							if (child.type === Error || child.type === Conditional) {
+								let a = this.__resolveModelPath(child.props.name || children[i - 1].props.name, this._ReactDOM);
+
+								if (!a) {
+									if (!this._initial) {
+										console.warn(`Could not find an matching input for \`Error\` Component ${child.props.name || children[i - 1].props.name}`);
+									}
+									return null;
+								}
+								
+								let values = a;
+								let children = child.props.children;
+
+								if (child.type === Error) {
+									values = {...a, valid: child.props.validate(a.value)};
+								}
+
+								if (child.type === Conditional) {
+									children = (child.props.condition(a.value)) ? children : null;
+								}
+
+								this.updateModel(child.props.name, values, this._valueModelRaw);
+
+								return React.cloneElement(child, {
+									children: renderWrappedChildren(children),
+									input: this.__resolveModelPath(child.props.name || children[i - 1].props.name, this._ReactDOM)
+								});
+							}
+
+							let _ReactProps = this.__resolveModelPath(child.props.name, this._ReactDOM);
+
+							// If current component has additional children, traverse through them as well!
+							if (child.props.children) {
+								// You have to override also children here
+								let parentProps = mergeParentProps;
+
+								if (child.type === Fieldset) {
+									parentProps = Object.assign(mergeParentProps || {}, {
+										fieldset: child.props.name,
+										serialization: child.props.serialization
+									});
+								}
+
+								// Select element has children, the apply to model logic should be it's own seperate function
+								if (child.type === 'select') {
+									if (child.props.name) {
+										if (!_ReactProps) { _ReactProps = this._getReactProps(child); }
+										_ReactProps = Object.assign({}, mergeParentProps, _ReactProps);
+										
+										if (firstPass) {
+											this.updateModel(child.props.name, _ReactProps, this._ReactDOM);
+											this.updateModel(child.props.name, { value: _ReactProps.value }, this._valueModel);
+											this.updateModel(child.props.name, _ReactProps, this._valueModelRaw);
+										}
+									}
+
+									_ReactProps = _ReactProps || {};
+
+									if (!firstPass) { formElements.push(child.type); }
+
+									return React.cloneElement(child, {
+										onChange: child.props.onChange || (() => {
+											//console.log(`React really doesn't like uncontrolled components switching`);
+										}),
+										children: renderWrappedChildren(child.props.children, parentProps),
+										value: _ReactProps.value || child.props.value || child.props.defaultValue || ''
+									});
+								}
+
+								return React.cloneElement(child, {
+									children: renderWrappedChildren(child.props.children, parentProps)
+								});
+							}
+
+							/**
+							 * Populate on initial render
+							 */
+							if (firstPass && !_ReactProps && this._formElementTypes.includes(child.type)) {
+								_ReactProps = this._getReactProps(child);
+								_ReactProps = Object.assign({}, mergeParentProps, _ReactProps);
+
+								this.updateModel(child.props.name, _ReactProps, this._ReactDOM);
+							}
+
+							if (firstPass && _ReactProps) {
+								if (mergeParentProps && mergeParentProps.fieldset) {
+									// Format any fieldset children
+									let formatArray = (mergeParentProps.serialization === 'array');
+									let starter = (formatArray) ? [] : {};
+									let fieldset = this.__resolveModelPath(mergeParentProps.fieldset, this._valueModel) || { value: starter };
+
+									if (formatArray) {
+										fieldset.value.push(_ReactProps.value);
+									} else {
+										fieldset.value[child.props.name] = _ReactProps.value;
+									}
+									this.updateModel(mergeParentProps.fieldset, fieldset, this._valueModel);
+
+									// Update RAW model
+									let fields = this.__resolveModelPath(mergeParentProps.fieldset, this._valueModelRaw);
+									fields = fields || {};
+									fields.value = fieldset;
+									fields[child.props.name] = _ReactProps;
+									this.updateModel(mergeParentProps.fieldset, fields, this._valueModelRaw);
+								} else {
+									this.updateModel(child.props.name, { value: _ReactProps.value }, this._valueModel);
+									
+									// Pass any existing values from `Error` components for example,
+									// this can be improved on
+									let existingRAWData = this.__resolveModelPath(child.props.name, this._valueModelRaw) || {};
+									this.updateModel(child.props.name, {..._ReactProps, valid: existingRAWData.valid }, this._valueModelRaw);
+								}
+							}
+
+							// Remove any none DOM propierties
+							if (_ReactProps) {
+								// Modify any parameters going in
+								let _RAWdata = this.__resolveModelPath(child.props.name, this._valueModelRaw) || {};
+
+								if (!firstPass) {
+									// Flag isn't set correctly. Doesn't currently do anything on secondPass
+									if (_ReactProps && _ReactProps.HTMLvalid === false) {
+										console.warn(_ReactProps.name,  _ReactProps.HTMLvalid,  'HTML failed validation. Need to do something about this');
+									}
+
+									_ReactProps.className = (_RAWdata.valid === false || _ReactProps.HTMLvalid === false) ? `${child.props.className || ''} invalid` : `${child.props.className || ''} valid`;
+									_ReactProps.className = (this.state.seen[child.props.name]) ? `${_ReactProps.className || ''} seen` : _ReactProps.className;
+									if (_ReactProps.className) {
+										_ReactProps.className = _ReactProps.className.trimLeft();
+									}
+									
+									// Since radio shares the same name, just check if radio value matches clicked value
+									if (child.type === 'input' && child.props.type === 'radio') {
+										_ReactProps = {
+											checked: (_ReactProps.value === child.props.value)
+										};
+									}
+
+									if (_ReactProps.value !== '' && _RAWdata.valid !== false) {
+										completedFormElements++;
+									}
+
+									if (['input', 'textarea', 'select'].includes(child.type)) {
+										if (child.props.type !== 'hidden') {
+											formElements.push(child.type);
+										}
+									}
+								}
+
+								['HTMLvalid', 'class'].forEach(key => {
+									delete _ReactProps[key];
+								});
+							}
+
+							// Return new component with overridden `onChange` callback
+							return React.cloneElement(child, {
+								onChange: child.props.onChange || (() => {
+									//console.log('stop React from moaning');
+								}),
+								...child.props,
+								..._ReactProps,
+							});
+						});
+					}
+					
+					let time = performance.now();
+					(this.props.children) ? renderWrappedChildren(this.props.children) : (null);
+					//console.log(`Render time: ${Math.round(performance.now() - time)}ms`);
+
+					firstPass = false;
+					this._initial = false;
+
+					let children = (this.props.children) ? renderWrappedChildren(this.props.children) : (null);
+
+					this._progress = {
+						total: formElements.length,
+						completed: completedFormElements,
+						percentage: Math.round((completedFormElements / formElements.length) * 100)
+					};
+					
+					// Remove any reserved props such as update
+					let {update, persistEvents, onMount, visible, ...props} = this.props;
+
+					if (this.props.visible === false) {
+						return (null);
+					}
+
+					return (
+						<form
+							ref={this.$form}
+							{...props}
+							onChange={this.onChange}
+							onFocus={this.onFocus}
+							onBlur={this.onBlur}
+							onSubmit={this.onSubmit}
+							//onInvalid={this.onChange}
+						>
+							{ children }
+						</form>
+					);
+				}
+
+				updateModel(path='', value, obj={}, separator='.') {
+					var properties = Array.isArray(path) ? path : path.split(separator);
+
+					properties.reduce((prev, curr, i) => {
+						if (!prev[curr]) { prev[curr] = {}; }
+						if (i === properties.length - 1) { prev[curr] = value; }
+						return prev && prev[curr];
+					}, obj);
+
+					return obj;
+				}
+
+				__resolveModelPath(path='', obj=self, separator='.') {
+					var properties = Array.isArray(path) ? path : path.split(separator);
+					if (properties[0] === 'fieldset') { properties.shift(); }
+					return properties.reduce((prev, curr) => prev && prev[curr], obj)
+				}
+			}
+		</script>
+
+		<script type="text/babel">
+			class Fieldset extends React.Component {
+				constructor(props) {
+					super(props);
+				}
+
+				render() {
+					return (
+						<fieldset
+							{...this.props}
+						>
+							{
+								React.Children.map(this.props.children, (child) => {
+									return React.cloneElement(child, {
+										key: `${this.props.name}-${child.props.name}`,
+										fieldset: this.props.name
+									});
+								})
+							}
+						</fieldset>
+					);
+				}
+			}
+		</script>
+		<script type="text/babel">
+			class Error extends React.Component {
+				constructor(props) {
+					super(props);
+				}
+
+				render() {
+					let show, valid;
+
+					if (typeof this.props.validate !== 'function') { console.warn(`Provide a \`validate\` function for "${this.props.input.name}" with value "${this.props.input.value}"`); }
+					if (this.props.input.value == null) { console.warn(`Provide a valid value for "${this.props.input.name}"`); }
+					
+					try {
+						valid = this.props.validate(this.props.input.value);
+					} catch(e) {
+						console.error(e);
+
+						return (null);
+					}
+
+					if (typeof valid !== 'boolean') {
+						console.warn(`Provide \`<Error/>\` component for "${this.props.input.name}" with value "${this.props.input.value}", a validation function which returns a boolean.`);
+					}
+
+					show = (this.props.validate(this.props.input.value) === false) ? (
+						<div className='form-error'>{this.props.message || this.props.children}</div>
+					) : (null);
+
+					return show;
+				}
+			}
+		</script>
+		<script type="text/babel">
+			class Conditional extends React.Component {
+				constructor(props) {
+					super(props);
+				}
+
+				render() {
+					let show, valid;
+
+					if (typeof this.props.condition !== 'function') { console.warn(`Provide a \`condition\` function for "${this.props.input.name}" with value "${this.props.input.value}"`); }
+					if (this.props.input.value == null) { console.warn(`Provide a valid value for "${this.props.input.name}"`); }
+
+					try {
+						valid = this.props.condition(this.props.input.value);
+					} catch(e) {
+						console.error(e);
+
+						return (null);
+					}
+
+					if (typeof valid !== 'boolean') {
+						console.warn(`Provide \`<Conditional/>\` component for "${this.props.input.name}" with value "${this.props.input.value}", a \`condition\` function which returns a boolean.`);
+					}
+
+					show = (this.props.condition(this.props.input.value) === true) ? (
+						<React.Fragment>
+							{this.props.children}
+						</React.Fragment>
+					) : (null);
+
+					return show;
+				}
+			}
+		</script>
+		<script type="text/babel">
+			ReactDOM.render(<Page />, document.getElementById("root"));
+		</script>
+	</body>
+</html>
