@@ -18,6 +18,10 @@
 		<script src="/components/Form/Form.js" type="text/babel"></script>
 
 		<script src="/components/PremiumOffer/BasicDetailsForm.js" type="text/babel"></script>
+		<script src="/components/PremiumOffer/ServiceHistoryForm.js" type="text/babel"></script>
+		<script src="/components/PremiumOffer/ConditionForm.js" type="text/babel"></script>
+		<script src="/components/PremiumOffer/WheelsAndTyresForm.js" type="text/babel"></script>
+
 		<!--
         <script src="https://unpkg.com/react@16/umd/react.development.js"></script>
         <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"></script>
@@ -203,9 +207,13 @@
 								<div><span style={{width: `${this.state.progress.percentage || 0}%`}}></span></div>
 								<div>{this.state.progress.completed} / {this.state.progress.total}</div>
 							</div>	
-							<BasicDetailsForm
-								update={this.update}
-							/>
+							<BasicDetailsForm update={this.update} />
+							<hr/>
+							<ServiceHistoryForm update={this.update} />
+							<hr/>
+							<ConditionForm update={this.update} />
+							<hr/>
+							<WheelsAndTyresForm update={this.update} />
 						</React.Fragment>
 					);
 				}

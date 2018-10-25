@@ -1,0 +1,93 @@
+class WheelsAndTyresForm extends React.Component {
+	constructor(props) {
+		super(props);
+
+    this.state = {
+      inputsWithFollowUp: [
+        {
+          field: 'alloys',
+          label: 'Alloys damaged',
+          name: 'Have any of the alloys been kerbed or scuffed',
+          details: {
+            field: 'alloys_details',
+            placeholder: 'Describe the amount of kerbing and scuffing'
+          }
+        },
+        {
+          field: 'tyres',
+          label: 'Tyres damaged',
+          name: 'Are there any problems with the tyres',
+          details: {
+            field: 'tyres_details',
+            placeholder: 'Describe what is wrong with the tyres, and which tyres are affected'
+          }
+        }
+      ],
+      inputsStandalone: [
+        {
+          field: 'wheel_nut',
+          label: 'Wheel nut damaged',
+          name: 'Do you have the locking wheel nut'
+        },
+        {
+					field: 'tool_pack',
+					label: 'Do you have the tool pack',
+          name: 'Do you have the tool pack'
+        }
+      ]
+    };
+	}
+
+	render() {
+		return (
+			<Form
+				//update={this.update}
+				name='WheelsAndTyresForm'
+				onMount={this.props.update}
+				onBlur={this.props.update}
+				//onChange={this.update}
+				//onFocus={this.update}
+				persistEvents={false} // Has a performance impact, only use if you need event data
+				visible={true}
+			>	
+				<h2>Wheels & tyres</h2>
+
+				{
+					this.state.inputsWithFollowUp.map(i => {
+						return (
+							<React.Fragment key={`${i.label}-${i.field}`}>
+								<h4>{i.label}</h4>
+								<input id={`${i.field}_0`} type="radio" name={i.field} value="true"/>
+								<label htmlFor={`${i.field}_0`}>Yes</label>
+								<input id={`${i.field}_1`} type="radio" name={i.field} value="false" checked required/>
+								<label htmlFor={`${i.field}_1`}>No</label>
+								<Conditional
+									name={i.field}
+									condition={(input) => {
+										return (input.checked && input.value === 'true');
+									}}
+								>
+									<textarea name={`${i.details.field}_details`} placeholder={i.details.placeholder}></textarea>
+								</Conditional>
+							</React.Fragment>
+						)
+					})
+				}
+
+				{
+					this.state.inputsStandalone.map(i => {
+						return (
+							<React.Fragment key={`${i.label}-${i.field}`}>
+								<h4>{i.label}</h4>
+								<input id={`${i.field}_0`} type="radio" name={i.field} value="true"/>
+								<label htmlFor={`${i.field}_0`}>Yes</label>
+								<input id={`${i.field}_1`} type="radio" name={i.field} value="false" checked required/>
+								<label htmlFor={`${i.field}_1`}>No</label>
+							</React.Fragment>
+						)
+					})
+				}
+			</Form>
+		);
+	}
+}

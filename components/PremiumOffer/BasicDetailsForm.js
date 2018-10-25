@@ -110,11 +110,6 @@ class BasicDetailsForm extends React.Component {
 					<label htmlFor="book_pack_0">Yes</label>
 					<input id="book_pack_1" type="radio" name="book_pack" value="false" required/>
 					<label htmlFor="book_pack_1">No</label>
-
-					<input id="scarjo1" type="radio" name="scarjo1" value="hello" required />
-					<label htmlFor="scarjo1">Yes</label>
-					<input id="scarjo2" type="radio" name="scarjo1" value="world" required />
-					<label htmlFor="scarjo2">No</label>
 				</React.Fragment>
 			</Form>
 		);

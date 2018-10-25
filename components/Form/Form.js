@@ -439,7 +439,7 @@ class Form extends React.Component {
 						if (child.props.type === 'radio' && _values.checked) {
 							inputState.checked = (_values.value.toString() === child.props.value.toString());
 						} else {
-							inputState.checked = _values.checked;
+							inputState.checked = _values.checked || _ReactProps.checked;
 						}
 					} else {
 						inputState.value = _values.value;
