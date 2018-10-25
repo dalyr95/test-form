@@ -42,7 +42,7 @@ class WheelsAndTyresForm extends React.Component {
 		return (
 			<Form
 				//update={this.update}
-				name='WheelsAndTyresForm'
+				name='wheels_and_tyres'
 				onMount={this.props.update}
 				onBlur={this.props.update}
 				//onChange={this.update}
@@ -64,7 +64,7 @@ class WheelsAndTyresForm extends React.Component {
 								<Conditional
 									name={i.field}
 									condition={(input) => {
-										return (input.checked && input.value === 'true');
+										return (input.checked && input.value === true);
 									}}
 								>
 									<textarea name={`${i.details.field}_details`} placeholder={i.details.placeholder}></textarea>

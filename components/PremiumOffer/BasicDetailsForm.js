@@ -7,7 +7,7 @@ class BasicDetailsForm extends React.Component {
 		return (
 			<Form
 				//update={this.update}
-				name='BasicDetailsForm'
+				name='basic_details'
 				onMount={this.props.update}
 				onBlur={this.props.update}
 				//onChange={this.update}
@@ -95,7 +95,7 @@ class BasicDetailsForm extends React.Component {
 					<Conditional
 							name="logbook"
 							condition={(input) => {
-								return (input.checked && input.value === 'true');
+								return (input.checked && input.value === true);
 							}}
 						>
 						<h4>Is the V5C logbook in your name?</h4>

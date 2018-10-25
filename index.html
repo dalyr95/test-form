@@ -180,6 +180,7 @@
 				}
 
 				async componentDidMount() {
+					/*
 					let offer = await fetch('/offer.json')
 										.then(resp => resp.json())
 										.then((offer) => {
@@ -189,6 +190,19 @@
 												offer: offer
 											});
 										});
+					*/
+					fetch("http://localhost:3030/api/premium-offer?vrm=HJ1",{"credentials":"omit","headers":{"x-access-token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImF2cmlsQG1vdG9yd2F5LmNvLnVrIiwicG9zdGNvZGUiOiJXMzZBVyIsImlhdCI6MTUzOTI2ODY3MiwiZXhwIjoxNTQxODYwNjcyfQ.tgU3Hdld6IRzBjsS1ZUGfDu3YTCHq6x_j2l3QOzLEnU"},"body":null,"method":"GET","mode":"cors"})
+					.then(resp => resp.json())
+					.then((offer) => {
+						this.setState({
+							loading: false
+						}, () => {
+							console.log(offer);
+							Object.entries(offer.data).forEach(([key, value]) => {
+								window.Offer[key].hydrate(value);
+							});
+						});
+					});
 				}
 
 				render() {

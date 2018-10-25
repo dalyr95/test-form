@@ -80,7 +80,7 @@ class ConditionForm extends React.Component {
 		return (
 			<Form
 				//update={this.update}
-				name='ConditionForm'
+				name='condition'
 				onMount={this.props.update}
 				onBlur={this.props.update}
 				//onChange={this.update}
@@ -95,7 +95,7 @@ class ConditionForm extends React.Component {
 					this.state.inputs.map(i => {
 						return (
 							<React.Fragment key={`${i.label}-${i.field}`}>
-								<h4>{i.label}</h4>
+								<h4>{i.label || i.name}</h4>
 								<input id={`${i.field}_0`} type="radio" name={i.field} value="true"/>
 								<label htmlFor={`${i.field}_0`}>Yes</label>
 								<input id={`${i.field}_1`} type="radio" name={i.field} value="false" checked required/>
@@ -103,7 +103,7 @@ class ConditionForm extends React.Component {
 								<Conditional
 									name={i.field}
 									condition={(input) => {
-										return (input.checked && input.value === 'true');
+										return (input.checked && input.value === true);
 									}}
 								>
 									<textarea name={`${i.field}_details`}></textarea>

@@ -7,7 +7,7 @@ class ServiceHistoryForm extends React.Component {
 		return (
 			<Form
 				//update={this.update}
-				name='ServiceHistoryForm'
+				name='service_history'
 				onMount={this.props.update}
 				onBlur={this.props.update}
 				//onChange={this.update}
@@ -33,7 +33,7 @@ class ServiceHistoryForm extends React.Component {
 				<Conditional
 						name="service_record"
 						condition={(input) => {
-							return (input.checked && input.value === 'true');
+							return (input.checked && input.value === true);
 						}}
 					>
 					<h4>How many services do you have recorded in the service record?</h4>
@@ -61,7 +61,7 @@ class ServiceHistoryForm extends React.Component {
 					<Conditional
 							name="cambelt_changed"
 							condition={(input) => {
-								return (input.checked && input.value === 'true');
+								return (input.checked && input.value === true);
 							}}
 						>
 							<h4>When was the cambelt changed?</h4>

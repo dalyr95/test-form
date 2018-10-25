@@ -111,6 +111,9 @@ class Form extends React.Component {
 		 * `required` attribute comes back as `required === ''`
 		 */
 		dom.required = (dom.required != null) ? true : dom.required;
+		if (dom.value && ['true', 'false'].includes(dom.value)) {
+			dom.value = JSON.parse(dom.value);
+		}
 		return dom;
 	}
 
@@ -244,7 +247,7 @@ class Form extends React.Component {
 			let name = this.generateFetchName(_ReactProps);
 
 			if (_ReactProps.fieldset) {
-				let fieldset = this.__resolveModelPath(_ReactProps.fieldset, hydrateData);
+				let fieldset = this.__resolveModelPath(_ReactProps.fieldset, hydrateData) || {};
 				let model = getModel(_ReactProps);
 
 				if (Array.isArray(fieldset)) {
@@ -437,12 +440,12 @@ class Form extends React.Component {
 
 					if (child.type === 'input' && ['radio', 'checkbox'].includes(child.props.type)) {
 						if (child.props.type === 'radio' && _values.checked) {
-							inputState.checked = (_values.value.toString() === child.props.value.toString());
+							inputState.checked = (_values.value != null) ? (_values.value.toString() === child.props.value.toString()) : false;
 						} else {
-							inputState.checked = _values.checked || _ReactProps.checked;
+							inputState.checked = (_values.value != null) ? _values.checked || _ReactProps.checked : false;
 						}
 					} else {
-						inputState.value = _values.value;
+						inputState.value = _values.value || '';
 						inputState.checked = _values.checked;
 					}
 				}
