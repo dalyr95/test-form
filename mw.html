@@ -222,6 +222,7 @@
 										<input id="equipment_20" type="checkbox" value="heated_seats"/><label htmlFor="equipment_20">Heated seats</label>
 										<input id="equipment_30" type="checkbox" value="parking_cam"/><label htmlFor="equipment_30">Rear parking camera</label>
 										<input id="equipment_40" type="checkbox" value="sound_system"/><label htmlFor="equipment_40">Upgraded sound system</label>
+
 									</Fieldset>
 
 									<h4>What colour are the seats?</h4>
@@ -299,6 +300,11 @@
 									<label htmlFor="book_pack_0">Yes</label>
 									<input id="book_pack_1" type="radio" name="book_pack" value="false" required/>
 									<label htmlFor="book_pack_1">No</label>
+
+									<input id="scarjo1" type="radio" name="scarjo1" value="hello" required />
+									<label htmlFor="scarjo1">Yes</label>
+									<input id="scarjo2" type="radio" name="scarjo1" value="world" required />
+									<label htmlFor="scarjo2">No</label>
 								</React.Fragment>
 							</Form>
 						</React.Fragment>
@@ -502,8 +508,7 @@
 							this.updateModel(fieldsetName, fieldset, this.__ValueModel);
 						}
 					} else {
-						let value = (['radio', 'checkbox'].includes(_Props.type)) ? model.checked : (model.value) ? model.value : null;
-						this.updateModel(name, value, this.__ValueModel);
+						this.updateModel(name, model.value, this.__ValueModel);
 					}
 
 					this.setState({
@@ -527,12 +532,93 @@
 				}
 
 				report() {
-					let model = Object.entries(JSON.parse(JSON.stringify(this.__ValueModel)));
+					let model = JSON.parse(JSON.stringify(this.__ValueModel));
 
 					return {
 						data: model,
 						progress: this._progress
 					};
+				}
+
+				hydrate(hydrateData) {
+					let getModel = (_ReactProps) => {
+						if (!_ReactProps) { return; }
+
+						let name = this.generateFetchName(_ReactProps);
+
+						return this.__resolveModelPath(name, this.__Model) || {};
+					};
+
+					let updateModel = (_ReactProps) => {
+						if (!_ReactProps) { return; }
+
+						let name = this.generateFetchName(_ReactProps);
+
+						if (_ReactProps.fieldset) {
+							/**
+							 * TODO - Deal with fieldsets
+							 */
+						} else {
+							let model = getModel(_ReactProps);
+
+							/**
+							 * TODO - Should we add to model anyway???
+							 */
+							if (!model) { return; }
+
+							let dataModel = this.__resolveModelPath(name, hydrateData);
+
+							if (['radio', 'checkbox'].includes(model.type)) {
+								model.checked = (typeof dataModel != null) ? true : false;
+							}
+
+							model.value = dataModel;
+						}
+					}
+
+					let generateModel = (children, mergeParentProps) => {
+						// Traverse through all children with pretty functional way :-)
+						return React.Children.map(children, (child) => {
+							// This is support for non-node elements (eg. pure text), they have no props
+							if (!child || !child.props) {
+								return child;
+							}
+
+							let _ReactProps = this._getReactProps(child, mergeParentProps);
+
+							// If current component has additional children, traverse through them as well!
+							if (child.props.children) {
+								let parentProps;
+
+								// Don't care about error or conditionals here, just parse the children, find form elements
+
+								// Get the fieldset and assign it to the child
+								if (child.type === Fieldset) {
+									parentProps = {};
+									parentProps = Object.assign(mergeParentProps || {}, {
+										fieldset: child.props.name,
+										serialization: child.props.serialization
+									});
+								}
+
+								/**
+								 * TODO - Reset any values in conditionals if closed?
+								 */
+
+								updateModel(_ReactProps);
+								generateModel(child.props.children, parentProps)
+								return;
+							}
+
+							updateModel(_ReactProps);
+						});
+					}
+
+					generateModel(this.props.children);
+
+					this.setState({
+						model: this.__Model
+					});
 				}
 
 				generateFetchName = (_ReactProps) => {
@@ -642,8 +728,12 @@
 							if (_values) {
 								// Do something if need be
 
-								if (child.type === 'input' && child.props.type === 'radio') {
-									inputState.checked = (inputState.checked && inputState.value === child.props.value);
+								if (child.type === 'input' && ['radio', 'checkbox'].includes(child.props.type)) {
+									if (child.props.type === 'radio' && _values.checked) {
+										inputState.checked = (_values.value.toString() === child.props.value.toString());
+									} else {
+										inputState.checked = _values.checked;
+									}
 								} else {
 									inputState.value = _values.value;
 									inputState.checked = _values.checked;
@@ -664,7 +754,8 @@
 								return React.cloneElement(child, {
 									children: renderWrappedChildren(child.props.children),
 									onChange: child.props.onChange || (() => {}),
-									...customProps
+									...customProps,
+									...inputState
 								});
 							}
 
