@@ -216,9 +216,17 @@
 										<input id="equipment_4" type="checkbox" value="sound_system"/><label htmlFor="equipment_4">Upgraded sound system</label>
 									</Fieldset>
 
+									<Fieldset name="equipment1" serialization="object">
+										<input id="equipment_00" type="checkbox" value="sat_nav"/><label htmlFor="equipment_00">Sat nav</label>
+										<input id="equipment_10" type="checkbox" value="panoramic_roof"/><label htmlFor="equipment_10">Panoramic roof / sun roof</label>
+										<input id="equipment_20" type="checkbox" value="heated_seats"/><label htmlFor="equipment_20">Heated seats</label>
+										<input id="equipment_30" type="checkbox" value="parking_cam"/><label htmlFor="equipment_30">Rear parking camera</label>
+										<input id="equipment_40" type="checkbox" value="sound_system"/><label htmlFor="equipment_40">Upgraded sound system</label>
+									</Fieldset>
+
 									<h4>What colour are the seats?</h4>
 									<label>
-										<select name="seat_color">
+										<select name="seat_color" required>
 											<option value="" disabled="">Select a colour</option>
 											<option name="White" value="white">White</option>
 											<option name="Cream" value="cream">Cream</option>
@@ -238,7 +246,7 @@
 
 									<h4>How are they upholstered?</h4>
 									<label className="select">
-										<select name="seat_fabric">
+										<select name="seat_fabric" required>
 											<option value="" disabled="">Select fabric</option>
 											<option value="leather">Leather</option>
 											<option value="leather_half">Half leather</option>
@@ -249,9 +257,9 @@
 									</label>
 
 									<h4>Do you have two working keys for the car?</h4>
-									<input id="num_keys_0___0" type="radio" name="num_keys0" value="2"/>
+									<input id="num_keys_0___0" type="radio" name="num_keys0" value="2" required/>
 									<label htmlFor="num_keys_0___0">Yes</label>
-									<input id="num_keys_1___0" type="radio" name="num_keys0" value="none"/>
+									<input id="num_keys_1___0" type="radio" name="num_keys0" value="none" required/>
 									<label htmlFor="num_keys_1___0">No</label>
 									<Conditional
 											name="num_keys0"
@@ -260,18 +268,18 @@
 											}}
 										>
 										<h4>How many working keys do you have?</h4>
-										<input id="num_keys_0___1" type="radio" name="num_keys1" value="0"/>
+										<input id="num_keys_0___1" type="radio" name="num_keys1" value="0" required />
 										<label htmlFor="num_keys_0___1">None</label>
-										<input id="num_keys_1___1" type="radio" name="num_keys1" value="1"/>
+										<input id="num_keys_1___1" type="radio" name="num_keys1" value="1" required />
 										<label htmlFor="num_keys_1___1">1</label>
-										<input id="num_keys_2___1" type="radio" name="num_keys1" value="3"/>
+										<input id="num_keys_2___1" type="radio" name="num_keys1" value="3" required />
 										<label htmlFor="num_keys_2___1">3+</label>
 									</Conditional>
 
 									<h4>Do you have the V5C logbook?</h4>
-									<input id="logbook_0" type="radio" name="logbook" value="true" />
+									<input id="logbook_0" type="radio" name="logbook" value="true" required />
 									<label htmlFor="logbook_0">Yes</label>
-									<input id="logbook_1" type="radio" name="logbook" value="false" />
+									<input id="logbook_1" type="radio" name="logbook" value="false" required />
 									<label htmlFor="logbook_1">No</label>
 									<Conditional
 											name="logbook"
@@ -280,16 +288,16 @@
 											}}
 										>
 										<h4>Is the V5C logbook in your name?</h4>
-										<input id="logbook_self_0" type="radio" name="logbook_self" value="true" />
+										<input id="logbook_self_0" type="radio" name="logbook_self" value="true" required />
 										<label htmlFor="logbook_self_0">Yes</label>
-										<input id="logbook_self_1" type="radio" name="logbook_self" value="false" />
+										<input id="logbook_self_1" type="radio" name="logbook_self" value="false" required />
 										<label htmlFor="logbook_self_2">No</label>
 									</Conditional>
 
 									<h4>Do you have the book pack?</h4>
-									<input id="book_pack_0" type="radio" name="book_pack" value="true"/>
+									<input id="book_pack_0" type="radio" name="book_pack" value="true" required/>
 									<label htmlFor="book_pack_0">Yes</label>
-									<input id="book_pack_1" type="radio" name="book_pack" value="false"/>
+									<input id="book_pack_1" type="radio" name="book_pack" value="false" required/>
 									<label htmlFor="book_pack_1">No</label>
 								</React.Fragment>
 							</Form>
@@ -347,6 +355,7 @@
 					};
 
 					this.__Model = {};
+					this.__ValueModel = {};
 				}
 
 				_ParseDom() {
@@ -374,14 +383,30 @@
 
 				_getReactProps($el, parentProps) {
 					if (this._formElementTypes.includes($el.type)) {
+						let valid = true;
+						let value = $el.props.defaultValue || '';
+
+						/**
+						 * TODO - Beef this up abit, possibly use pattern?
+						 */
+						if ($el.props.required) {
+							if (value === '') {
+								valid = false;
+							}
+
+							if (['radio', 'checkbox'].includes($el.props.type)) {
+								valid = $el.props.checked || false;
+							}
+						}
+
 						let attributes = {
-							checked: false,
+							checked: $el.props.checked || false,
 							type: $el.type,
-							value: $el.props.defaultValue || '',
+							value: value,
+							valid: valid,
 							...$el.props,
 							...parentProps || {}
 						}
-
 						return attributes;
 					}
 				}
@@ -433,7 +458,53 @@
 						return;
 					}
 
-					this.__Model = this.updateModel(name, mergeDeep(this.__resolveModelPath(name, this.__Model), DOMAttributes), this.__Model);
+					let model = this.__resolveModelPath(name, this.__Model);
+					model = mergeDeep(model, DOMAttributes);
+
+					this.__Model = this.updateModel(name, model, this.__Model);
+
+					if (model.fieldset) {
+						let fieldsetName = model.fieldset;
+						let fieldset = this.__resolveModelPath(fieldsetName, this.__ValueModel);
+						let useChecked = ['radio', 'checkbox'].includes(model.type);
+
+						if (model.serialization === 'array') {
+							let arr;
+							if (useChecked) {
+								if (model.checked) {
+									fieldset.push(name);
+									arr = fieldset;
+								} else {
+									arr = fieldset.filter(f => (f !== name));
+								}
+								
+								this.updateModel(fieldsetName, arr, this.__ValueModel);
+							} else {
+
+							}
+						} else {
+							let vector = (model.value) ? model.value : null;
+
+							if (useChecked) {
+								if (model.checked) {
+									fieldset[name] = model.value;
+								} else {
+									delete fieldset[name];
+								}
+							} else {
+								if (vector) {
+									fieldset[name] = model.value;
+								} else {
+									delete fieldset[name];
+								}
+							}
+
+							this.updateModel(fieldsetName, fieldset, this.__ValueModel);
+						}
+					} else {
+						let value = (['radio', 'checkbox'].includes(_Props.type)) ? model.checked : (model.value) ? model.value : null;
+						this.updateModel(name, value, this.__ValueModel);
+					}
 
 					this.setState({
 						model: this.__Model
@@ -456,7 +527,7 @@
 				}
 
 				report() {
-					let model = JSON.parse(JSON.stringify(this.__Model));
+					let model = Object.entries(JSON.parse(JSON.stringify(this.__ValueModel)));
 
 					return {
 						data: model,
@@ -465,7 +536,6 @@
 				}
 
 				generateFetchName = (_ReactProps) => {
-					//let name = (_ReactProps.type === 'radio') ? `${_ReactProps.name}-${_ReactProps.value}` : _ReactProps.name;
 					let name = _ReactProps.name || _ReactProps.id;
 
 					return name;
@@ -493,6 +563,19 @@
 						let {children, ..._Props} = _ReactProps;
 
 						this.updateModel(name, _Props, this.__Model);
+
+						if (_Props.fieldset) {
+							let fieldset = getModel( _Props.fieldset);
+
+							if (Array.isArray(fieldset) || Object.keys(fieldset).length === 0) {
+								fieldset = (_Props.serialization === 'array') ? [] : {};
+							}
+
+							this.updateModel(_Props.fieldset, fieldset, this.__ValueModel);
+						} else {
+							let value = (['radio', 'checkbox'].includes(_Props.type)) ? _Props.checked : (_Props.value) ? _Props.value : null;
+							this.updateModel(name, value, this.__ValueModel);
+						}
 					};
 
 					let getModel = (_ReactProps) => {
@@ -515,17 +598,22 @@
 
 							// If current component has additional children, traverse through them as well!
 							if (child.props.children) {
-								let parentProps = {};
+								let parentProps;
 
 								// Don't care about error or conditionals here, just parse the children, find form elements
 								
 								// Get the fieldset and assign it to the child
 								if (child.type === Fieldset) {
+									parentProps = {};
 									parentProps = Object.assign(mergeParentProps || {}, {
 										fieldset: child.props.name,
 										serialization: child.props.serialization
 									});
 								}
+
+								/**
+								 * TODO - Reset any values in conditionals if closed?
+								 */
 
 								updateModel(_ReactProps);
 								generateModel(child.props.children, parentProps)
@@ -547,6 +635,7 @@
 
 							let _ReactProps = this._getReactProps(child);
 							let _values = getModel(_ReactProps);
+
 							let inputState = {};
 							let customProps = {};
 
@@ -620,6 +709,7 @@
 							onBlur={this.onBlur}
 							onSubmit={this.onSubmit}
 							//onInvalid={this.onChange}
+							noValidate
 						>
 							{ children }
 						</form>
