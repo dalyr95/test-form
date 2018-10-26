@@ -3,6 +3,15 @@ class BasicDetailsForm extends React.Component {
 		super(props);
 	}
 
+	initialDataTransform(initialData) {
+		if (!initialData['num_keys']) {
+			initialData['num_keys0'] = 'none';
+		} else {
+			initialData['num_keys1'] = '3'.toString();
+		}
+		return initialData;
+	}
+
 	render() {
 		return (
 			<Form
@@ -13,6 +22,7 @@ class BasicDetailsForm extends React.Component {
 				onChange={this.props.update}
 				//onFocus={this.update}
 				initialData={this.props.initialData}
+				initialDataTransform={this.initialDataTransform}
 				persistEvents={false} // Has a performance impact, only use if you need event data
 				visible={true}
 			>	
@@ -26,15 +36,18 @@ class BasicDetailsForm extends React.Component {
 						<input id="equipment_3" type="checkbox" value="parking_cam"/><label htmlFor="equipment_3">Rear parking camera</label>
 						<input id="equipment_4" type="checkbox" value="sound_system"/><label htmlFor="equipment_4">Upgraded sound system</label>
 					</Fieldset>
-
-					<Fieldset name="equipment1" serialization="object">
-						<input id="equipment_00" type="checkbox" value="sat_nav"/><label htmlFor="equipment_00">Sat nav</label>
-						<input id="equipment_10" type="checkbox" value="panoramic_roof"/><label htmlFor="equipment_10">Panoramic roof / sun roof</label>
-						<input id="equipment_20" type="checkbox" value="heated_seats"/><label htmlFor="equipment_20">Heated seats</label>
-						<input id="equipment_30" type="checkbox" value="parking_cam"/><label htmlFor="equipment_30">Rear parking camera</label>
-						<input id="equipment_40" type="checkbox" value="sound_system"/><label htmlFor="equipment_40">Upgraded sound system</label>
-
-					</Fieldset>
+					{
+						/*
+						// Example of serialization object
+						<Fieldset name="equipment1" serialization="object">
+							<input id="equipment_00" type="checkbox" value="sat_nav"/><label htmlFor="equipment_00">Sat nav</label>
+							<input id="equipment_10" type="checkbox" value="panoramic_roof"/><label htmlFor="equipment_10">Panoramic roof / sun roof</label>
+							<input id="equipment_20" type="checkbox" value="heated_seats"/><label htmlFor="equipment_20">Heated seats</label>
+							<input id="equipment_30" type="checkbox" value="parking_cam"/><label htmlFor="equipment_30">Rear parking camera</label>
+							<input id="equipment_40" type="checkbox" value="sound_system"/><label htmlFor="equipment_40">Upgraded sound system</label>
+						</Fieldset>
+						*/
+					}
 
 					<h4>What colour are the seats?</h4>
 					<label>
@@ -69,6 +82,10 @@ class BasicDetailsForm extends React.Component {
 					</label>
 
 					<h4>Do you have two working keys for the car?</h4>
+					{/*
+						TODO - Conditional value mapping, such as a conditonValue component
+						Or a transform layer in the form, pass in a function
+					*/}
 					<input id="num_keys_0___0" type="radio" name="num_keys0" value="2" required/>
 					<label htmlFor="num_keys_0___0">Yes</label>
 					<input id="num_keys_1___0" type="radio" name="num_keys0" value="none" required/>

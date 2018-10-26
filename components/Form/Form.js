@@ -246,6 +246,10 @@ class Form extends React.Component {
 	}
 
 	hydrate(hydrateData) {
+		if (this.props.initialDataTransform) {
+			hydrateData = this.props.initialDataTransform(hydrateData);
+		}
+
 		let getModel = (_ReactProps, model) => {
 			if (!_ReactProps) { return; }
 
