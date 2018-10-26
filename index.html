@@ -172,11 +172,15 @@
 				
 				update(e, data) {
 					let setState = () => {
-						console.log(`%c${e.type} event`, 'font-weight: bold; text-decoration: underline; text-transform: capitalize; ', 'Sending to API =>', data);
+						let offer = Object.assign({}, this.state.offer);
+						offer[data.name] = data.data;
 
 						this.setState({
+							offer,
 							progress: data.progress
 						});
+
+						console.log(`%c${e.type} event`, 'font-weight: bold; text-decoration: underline; text-transform: capitalize; ', 'Sending to API =>', offer);
 					}
 
 					if (e.target) {
@@ -189,8 +193,8 @@
 						}
 						return;
 					}
-
-					setState();
+					// Fire on `mount`
+					//setState();
 				}
 
 				async componentDidMount() {
@@ -210,6 +214,7 @@
 					.then((offer) => {
 						this.setState({
 							loading: false,
+							offer: offer.data,
 							initialData: offer
 						}, () => {
 							console.log(offer);

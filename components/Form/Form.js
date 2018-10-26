@@ -51,6 +51,10 @@ class Form extends React.Component {
 		if (!this.props.onChange && !this.props.onBlur) {
 			console.warn(`No \`onChange\` or \`onBlur\` handlers are provided for \`<Form/>\` name \`${this.props.name}\`. Are you sure?`);
 		}
+
+		if (!this.props.name) {
+			console.warn(`No \`name\` prop for \`<Form/>\` component. Are you sure?`);
+		}
 	}
 
 	_ParseDom() {
@@ -176,7 +180,9 @@ class Form extends React.Component {
 						fieldset.push(model.value);
 						arr = fieldset;
 					} else {
-						arr = fieldset.filter(f => (f !== name));
+						arr = fieldset.filter(f => {
+							return (f !== model.value)
+						});
 					}
 					
 					this.updateModel(fieldsetName, arr, this.__ValueModel);
@@ -234,17 +240,18 @@ class Form extends React.Component {
 
 		return {
 			data: model,
+			name: this.props.name,
 			progress: this._progress
 		};
 	}
 
 	hydrate(hydrateData) {
-		let getModel = (_ReactProps) => {
+		let getModel = (_ReactProps, model) => {
 			if (!_ReactProps) { return; }
 
 			let name = this.generateFetchName(_ReactProps);
 
-			return this.__resolveModelPath(name, this.__Model) || {};
+			return this.__resolveModelPath(name, model) || {};
 		};
 
 		let updateModel = (_ReactProps) => {
@@ -254,13 +261,15 @@ class Form extends React.Component {
 
 			if (_ReactProps.fieldset) {
 				let fieldset = this.__resolveModelPath(_ReactProps.fieldset, hydrateData) || {};
-				let model = getModel(_ReactProps);
+				let modelModel = getModel(_ReactProps, this.__Model);
+				let valueModel = getModel(_ReactProps.fieldset, this.__ValueModel);
 
 				if (Array.isArray(fieldset)) {
 					// Assuming fieldset arrays would be checkboxes as it's a boolean essentially
 					fieldset.forEach(f => {
 						if (_ReactProps.value === f) {
-							model.checked = true;
+							modelModel.checked = true;
+							valueModel.push(modelModel.value);
 						}
 					});
 				} else {
@@ -274,7 +283,7 @@ class Form extends React.Component {
 					})
 				}
 			} else {
-				let model = getModel(_ReactProps);
+				let model = getModel(_ReactProps, this.__Model);
 
 				/**
 				 * TODO - Should we add to model anyway???
@@ -338,9 +347,7 @@ class Form extends React.Component {
 	}
 
 	generateFetchName = (_ReactProps) => {
-		let name = _ReactProps.name || _ReactProps.id;
-
-		return name;
+		return (typeof _ReactProps === 'string') ? _ReactProps : _ReactProps.name || _ReactProps.id;
 	}
 
 	render() {
@@ -367,7 +374,7 @@ class Form extends React.Component {
 			this.updateModel(name, _Props, this.__Model);
 
 			if (_Props.fieldset) {
-				let fieldset = getModel( _Props.fieldset);
+				let fieldset = getModel(_Props.fieldset);
 
 				if (Array.isArray(fieldset) || Object.keys(fieldset).length === 0) {
 					fieldset = (_Props.serialization === 'array') ? [] : {};
