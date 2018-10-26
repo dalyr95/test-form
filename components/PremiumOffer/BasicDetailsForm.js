@@ -7,7 +7,7 @@ class BasicDetailsForm extends React.Component {
 		if (!initialData['num_keys']) {
 			initialData['num_keys0'] = 'none';
 		} else {
-			initialData['num_keys1'] = '3'.toString();
+			initialData['num_keys1'] = initialData['num_keys'].toString();
 		}
 		return initialData;
 	}
@@ -48,26 +48,16 @@ class BasicDetailsForm extends React.Component {
 						</Fieldset>
 						*/
 					}
-					{/*
-						TODO - Hook these into fields
-					*/}
+
 					<h4>What colour are the seats?</h4>
 					<label>
 						<select name="seat_color" required>
 							<option value="" disabled="">Select a colour</option>
-							<option name="White" value="white">White</option>
-							<option name="Cream" value="cream">Cream</option>
-							<option name="Tan" value="tan">Tan</option>
-							<option name="Brown" value="brown">Brown</option>
-							<option name="Black" value="black">Black</option>
-							<option name="Grey" value="grey">Grey</option>
-							<option name="Black &amp; blue" value="blackblue">Black &amp; blue</option>
-							<option name="Black &amp; red" value="blackred">Black &amp; red</option>
-							<option name="Black &amp; white" value="blackwhite">Black &amp; white</option>
-							<option name="Black &amp; grey" value="blackgrey">Black &amp; grey</option>
-							<option name="Red" value="red">Red</option>
-							<option name="Blue" value="blue">Blue</option>
-							<option name="Other" value="other">Other</option>
+							{
+								this.props.fields.seat_color.map(f => {
+									return (<option key={f.value} name={f.value} value={f.value}>{f.text}</option>);
+								})
+							}
 						</select>
 					</label>
 
@@ -75,19 +65,17 @@ class BasicDetailsForm extends React.Component {
 					<label className="select">
 						<select name="seat_fabric" required>
 							<option value="" disabled="">Select fabric</option>
-							<option value="leather">Leather</option>
-							<option value="leather_half">Half leather</option>
-							<option value="cloth">Cloth</option>
-							<option value="suede">Suede</option>
-							<option value="suede_half">Half suede</option>
+							<option value="" disabled="">Select a colour</option>
+							{
+								this.props.fields.seat_fabric.map(f => {
+									return (<option key={f.value} name={f.value} value={f.value}>{f.text}</option>);
+								})
+							}
 						</select>
 					</label>
 
 					<h4>Do you have two working keys for the car?</h4>
-					{/*
-						TODO - Conditional value mapping, such as a conditonValue component
-						Or a transform layer in the form, pass in a function
-					*/}
+
 					<input id="num_keys_0___0" type="radio" name="num_keys0" value="2" required/>
 					<label htmlFor="num_keys_0___0">Yes</label>
 					<input id="num_keys_1___0" type="radio" name="num_keys0" value="none" required/>

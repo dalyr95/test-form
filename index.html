@@ -238,7 +238,7 @@
 								<div><span style={{width: `${this.state.progress.percentage || 0}%`}}></span></div>
 								<div>{this.state.progress.completed} / {this.state.progress.total}</div>
 							</div>	
-							<BasicDetailsForm update={this.update} initialData={this.state.initialData.data.basic_details} />
+							<BasicDetailsForm update={this.update} initialData={this.state.initialData.data.basic_details} fields={this.state.initialData.fields}/>
 							<hr/>
 							<ServiceHistoryForm update={this.update} initialData={this.state.initialData.data.service_history} />
 							<hr/>
