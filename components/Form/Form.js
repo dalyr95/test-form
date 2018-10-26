@@ -513,7 +513,7 @@ class Form extends React.Component {
 		};
 		
 		// Remove any reserved props such as update
-		let {update, persistEvents, onMount, visible, initialData, ...props} = this.props;
+		let {update, persistEvents, onMount, visible, initialData, initialDataTransform, ...props} = this.props;
 
 		if (!this.props.children || this.props.visible === false) {
 			return (null);

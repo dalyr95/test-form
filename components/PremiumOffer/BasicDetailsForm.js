@@ -48,7 +48,9 @@ class BasicDetailsForm extends React.Component {
 						</Fieldset>
 						*/
 					}
-
+					{/*
+						TODO - Hook these into fields
+					*/}
 					<h4>What colour are the seats?</h4>
 					<label>
 						<select name="seat_color" required>
