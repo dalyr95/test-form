@@ -12,6 +12,7 @@ class ServiceHistoryForm extends React.Component {
 				onBlur={this.props.update}
 				//onChange={this.update}
 				//onFocus={this.update}
+				initialData={this.props.initialData}
 				persistEvents={false} // Has a performance impact, only use if you need event data
 				visible={true}
 			>	

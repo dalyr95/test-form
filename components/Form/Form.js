@@ -118,6 +118,9 @@ class Form extends React.Component {
 	}
 
 	componentDidMount() {
+		if (this.props.initialData) {
+			this.hydrate(this.props.initialData);
+		}
 		if (this.props.onMount) { this.props.onMount({type: 'mount'}, this.report())}
 	}
 
@@ -178,7 +181,9 @@ class Form extends React.Component {
 					
 					this.updateModel(fieldsetName, arr, this.__ValueModel);
 				} else {
-
+					/**
+					 * TODO - Sort this condition out
+					 */
 				}
 			} else {
 				let vector = (model.value) ? model.value : null;
@@ -203,11 +208,12 @@ class Form extends React.Component {
 			this.updateModel(name, model.value, this.__ValueModel);
 		}
 
+		if (this.props.onChange) { this.props.onChange(e, this.report()); }
+
 		this.setState({
 			model: this.__Model
 		}, () => {
 			this.onUpdate();
-			if (this.props.onChange) { this.props.onChange(e, this.report()); }
 		});
 	}
 
@@ -496,7 +502,7 @@ class Form extends React.Component {
 		};
 		
 		// Remove any reserved props such as update
-		let {update, persistEvents, onMount, visible, ...props} = this.props;
+		let {update, persistEvents, onMount, visible, initialData, ...props} = this.props;
 
 		if (!this.props.children || this.props.visible === false) {
 			return (null);

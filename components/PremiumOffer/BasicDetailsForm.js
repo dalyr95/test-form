@@ -10,8 +10,9 @@ class BasicDetailsForm extends React.Component {
 				name='basic_details'
 				onMount={this.props.update}
 				onBlur={this.props.update}
-				//onChange={this.update}
+				onChange={this.props.update}
 				//onFocus={this.update}
+				initialData={this.props.initialData}
 				persistEvents={false} // Has a performance impact, only use if you need event data
 				visible={true}
 			>	

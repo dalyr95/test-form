@@ -166,17 +166,31 @@
 
 					this.state = {
 						progress: {},
-						persistEvents: true,
 						loading: true
 					};
 				}
 				
 				update(e, data) {
-					console.log(`%c${e.type} event`, 'font-weight: bold; text-decoration: underline; text-transform: capitalize; ', 'Sending to API =>', data);
+					let setState = () => {
+						console.log(`%c${e.type} event`, 'font-weight: bold; text-decoration: underline; text-transform: capitalize; ', 'Sending to API =>', data);
 
-					this.setState({
-						progress: data.progress
-					});
+						this.setState({
+							progress: data.progress
+						});
+					}
+
+					if (e.target) {
+						if (e.target.tagName === 'SELECT' || ['checkbox', 'radio'].includes(e.target.type)) {
+							if (e.type === 'change') {
+								setState();
+							}
+						} else if (e.type === 'blur') {
+							setState();
+						}
+						return;
+					}
+
+					setState();
 				}
 
 				async componentDidMount() {
@@ -191,16 +205,14 @@
 											});
 										});
 					*/ 
-					fetch("https://motorway-dealership-platform-staging.azurewebsites.net/api/premium-offer?vrm=HJ1",{"credentials":"omit","headers":{"x-access-token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImF2cmlsQG1vdG9yd2F5LmNvLnVrIiwicG9zdGNvZGUiOiJXMzZBVyIsImlhdCI6MTUzOTI2ODY3MiwiZXhwIjoxNTQxODYwNjcyfQ.tgU3Hdld6IRzBjsS1ZUGfDu3YTCHq6x_j2l3QOzLEnU"},"body":null,"method":"GET","mode":"cors"})
+					fetch("http://localhost:3030/api/premium-offer?vrm=HJ1",{"credentials":"omit","headers":{"x-access-token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImF2cmlsQG1vdG9yd2F5LmNvLnVrIiwicG9zdGNvZGUiOiJXMzZBVyIsImlhdCI6MTUzOTI2ODY3MiwiZXhwIjoxNTQxODYwNjcyfQ.tgU3Hdld6IRzBjsS1ZUGfDu3YTCHq6x_j2l3QOzLEnU"},"body":null,"method":"GET","mode":"cors"})
 					.then(resp => resp.json())
 					.then((offer) => {
 						this.setState({
-							loading: false
+							loading: false,
+							initialData: offer
 						}, () => {
 							console.log(offer);
-							Object.entries(offer.data).forEach(([key, value]) => {
-								window.Offer[key].hydrate(value);
-							});
 						});
 					});
 				}
@@ -221,13 +233,13 @@
 								<div><span style={{width: `${this.state.progress.percentage || 0}%`}}></span></div>
 								<div>{this.state.progress.completed} / {this.state.progress.total}</div>
 							</div>	
-							<BasicDetailsForm update={this.update} />
+							<BasicDetailsForm update={this.update} initialData={this.state.initialData.data.basic_details} />
 							<hr/>
-							<ServiceHistoryForm update={this.update} />
+							<ServiceHistoryForm update={this.update} initialData={this.state.initialData.data.service_history} />
 							<hr/>
-							<ConditionForm update={this.update} />
+							<ConditionForm update={this.update} initialData={this.state.initialData.data.condition} />
 							<hr/>
-							<WheelsAndTyresForm update={this.update} />
+							<WheelsAndTyresForm update={this.update} initialData={this.state.initialData.data.wheels_and_tyres} />
 						</React.Fragment>
 					);
 				}
