@@ -240,7 +240,6 @@ class Form extends React.Component {
 	}
 
 	onUpdate() {
-		console.log('onUPPPPPPDATE!!', this);
 		if (this.props.update) { this.props.update(null, this.report()); }
 	}
 

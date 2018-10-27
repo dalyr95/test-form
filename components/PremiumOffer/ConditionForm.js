@@ -107,7 +107,7 @@ class ConditionForm extends React.Component {
 										return (input.checked && input.value === true);
 									}}
 								>
-									<textarea name={`${i.field}_details`}></textarea>
+									<textarea name={i.details.field} placeholder={i.details.placeholder}></textarea>
 								</Conditional>
 							</React.Fragment>
 						)

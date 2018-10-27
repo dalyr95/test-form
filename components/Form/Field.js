@@ -4,6 +4,9 @@ class Field extends React.Component {
   }
 
   render() {
+	  /**
+	   * TODO - wrap in a fieldset and then stopPropagation??
+	   */
     return (
 		<React.Fragment>
 			{
