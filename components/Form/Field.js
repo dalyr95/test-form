@@ -6,6 +6,7 @@ class Field extends React.Component {
   render() {
 	  /**
 	   * TODO - wrap in a fieldset and then stopPropagation??
+	   * if (!prop.handleOwnPropagation) { <fieldset>updateParent(myself)</fieldset> }
 	   */
     return (
 		<React.Fragment>
