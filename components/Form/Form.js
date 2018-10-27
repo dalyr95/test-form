@@ -26,6 +26,7 @@ class Form extends React.Component {
 		this._formElementTypes = [
 			//'button',
 			//'datalist',
+			Field, // Custom Element Component 
 			'fieldset',
 			'form',
 			'input',
@@ -149,12 +150,13 @@ class Form extends React.Component {
 		if (this.props.onFocus) { this.props.onFocus(e, this.report()); }
 	}
 
-	onChange(e) {
+	onChange(e, value) {
 		if (this.props.persistEvents) { e.persist(); }
 
 		//this._DOM = this.updateModel(e.target.name, this._getDOMAttributes(e.target), this._DOM);
 		let DOMAttributes = this._parseDOMAttributesToReactProps(this._getDOMAttributes(e.target));
 		DOMAttributes.HTMLvalid = e.target.checkValidity();
+		DOMAttributes.value = value || DOMAttributes.value;
 
 		let name = this.generateFetchName(DOMAttributes);
 
@@ -167,6 +169,11 @@ class Form extends React.Component {
 		model = mergeDeep(model, DOMAttributes);
 
 		this.__Model = this.updateModel(name, model, this.__Model);
+
+		if (!model) {
+			console.error(`Could not find a model to change for \`${name}\``);
+			return;
+		}
 
 		if (model.fieldset) {
 			let fieldsetName = model.fieldset;
@@ -232,6 +239,7 @@ class Form extends React.Component {
 	}
 
 	onUpdate() {
+		console.log('onUPPPPPPDATE!!', this);
 		if (this.props.update) { this.props.update(null, this.report()); }
 	}
 
@@ -475,6 +483,10 @@ class Form extends React.Component {
 					customProps.input = _values || {};
 				}
 
+				if (child.type === Field) {
+					customProps.updateForm = this.onChange;
+				}
+
 				// If current component has additional children, traverse through them as well!
 				if (child.props.children) {
 					// You have to override also children here
@@ -504,7 +516,7 @@ class Form extends React.Component {
 			children = renderWrappedChildren(this.props.children);
 		}
 
-		console.log(`Render time: ${Math.round(performance.now() - time)}ms`);
+		console.info(`Render time: ${Math.round(performance.now() - time)}ms`);
 
 		this._progress = {
 			total: formElements.length,
@@ -513,7 +525,7 @@ class Form extends React.Component {
 		};
 		
 		// Remove any reserved props such as update
-		let {update, persistEvents, onMount, visible, initialData, initialDataTransform, ...props} = this.props;
+		let {update, persistEvents, onMount, visible, initialData, initialDataTransform, updateForm, ...props} = this.props;
 
 		if (!this.props.children || this.props.visible === false) {
 			return (null);

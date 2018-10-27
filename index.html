@@ -9,13 +9,13 @@
         <script src="external/react.development.js"></script>
         <script src="external/react-dom.development.js"></script>
 		<script src="external/babel.min.js"></script>
-		<link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.4.1/cropper.min.css" rel="stylesheet">
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.4.1/cropper.min.js"></script>
 
 		<script src="/components/Form/Conditional.js" type="text/babel"></script>
 		<script src="/components/Form/Error.js" type="text/babel"></script>
 		<script src="/components/Form/Fieldset.js" type="text/babel"></script>
 		<script src="/components/Form/Form.js" type="text/babel"></script>
+		<script src="/components/Form/Field.js" type="text/babel"></script>
+		<script src="/components/Form/MonthControl.js" type="text/babel"></script>
 
 		<script src="/components/PremiumOffer/BasicDetailsForm.js" type="text/babel"></script>
 		<script src="/components/PremiumOffer/ServiceHistoryForm.js" type="text/babel"></script>
@@ -25,7 +25,9 @@
 		<!--
         <script src="https://unpkg.com/react@16/umd/react.development.js"></script>
         <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"></script>
-        <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
+		<script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
+		<link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.4.1/cropper.min.css" rel="stylesheet">
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.4.1/cropper.min.js"></script>
 		-->
 		<style>
 			*,
@@ -198,18 +200,20 @@
 				}
 
 				async componentDidMount() {
-					/*
+
 					let offer = await fetch('/offer.json')
 										.then(resp => resp.json())
 										.then((offer) => {
-											console.log(offer);
 											this.setState({
 												loading: false,
-												offer: offer
+												offer: offer.data,
+												initialData: offer
+											}, () => {
+												console.log(offer);
 											});
 										});
-					*/ 
-					fetch("http://localhost:3030/api/premium-offer?vrm=HJ1",{"credentials":"omit","headers":{"x-access-token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImF2cmlsQG1vdG9yd2F5LmNvLnVrIiwicG9zdGNvZGUiOiJXMzZBVyIsImlhdCI6MTUzOTI2ODY3MiwiZXhwIjoxNTQxODYwNjcyfQ.tgU3Hdld6IRzBjsS1ZUGfDu3YTCHq6x_j2l3QOzLEnU"},"body":null,"method":"GET","mode":"cors"})
+					return;
+					fetch("https://motorway-platform-stage.herokuapp.com/api/premium-offer?vrm=RD1", {"credentials":"omit","headers":{"x-access-token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InJvYitzdG95YTEyM0Btb3RvcndheS5jby51ayIsInBvc3Rjb2RlIjoiVzM2QVciLCJpYXQiOjE1NDA2Mzc2MDQsImV4cCI6MTU0MzIyOTYwNH0.2jUiyrZkH-EC0F0LJ-1U2LPQL0-S-_-GuWox2_XSwqM"},"body":null,"method":"GET","mode":"no-cors"})
 					.then(resp => resp.json())
 					.then((offer) => {
 						this.setState({

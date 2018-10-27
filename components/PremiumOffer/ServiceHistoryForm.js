@@ -3,6 +3,14 @@ class ServiceHistoryForm extends React.Component {
 		super(props);
 	}
 
+	initialDataTransform(initialData) {
+		if (initialData['service_date']) {
+			let match = initialData['service_date'].match(/^[0-9]{4}-[0-9]{2}/);
+			initialData['service_date'] = (match) ? match[0] : '';
+		}
+		return initialData;
+	}
+
 	render() {
 		return (
 			<Form
@@ -10,8 +18,8 @@ class ServiceHistoryForm extends React.Component {
 				name='service_history'
 				onMount={this.props.update}
 				onBlur={this.props.update}
-				//onChange={this.update}
-				//onFocus={this.update}
+				onChange={this.props.update}
+				//onFocus={this.props.update}
 				initialData={this.props.initialData}
 				persistEvents={false} // Has a performance impact, only use if you need event data
 				visible={true}
@@ -48,7 +56,10 @@ class ServiceHistoryForm extends React.Component {
 					<input name="service_stamps_independent" type="number" min="0" placeholder="0" value="0" />
 					
 					<h4>When was the vehicle last serviced?</h4>
-					<input name="service_date" type="month" min="2013-01" max="2018-11" value="2015-03" />
+
+					<Field name="service_date" type="month"  min="2013-01" max="2018-11" value="" year={2013}>
+						<MonthControl />
+					</Field>
 
 					<h4>What was the mileage at the last service?</h4>
 					<input name="service_mileage" type="number" min="0" />
@@ -66,7 +77,9 @@ class ServiceHistoryForm extends React.Component {
 							}}
 						>
 							<h4>When was the cambelt changed?</h4>
-							<input name="cambelt_change_date" type="month" min="2013-01" max="2018-11" value="" />
+							<Field  name="cambelt_change_date" type="month" min="2013-01" max="2018-11"  year={2013} value="">
+								<MonthControl />
+							</Field>
 
 							<h4>What was the mileage when the cambelt was changed?</h4>
 							<input id="cambelt_change_mileage" type="number" min="0" placeholder="0" value=""></input>
