@@ -107,6 +107,7 @@ class Form extends React.Component {
 				...$el.props,
 				...parentProps || {}
 			}
+
 			return attributes;
 		}
 	}
@@ -308,8 +309,8 @@ class Form extends React.Component {
 				if (['radio', 'checkbox'].includes(model.type)) {
 					model.checked = (typeof dataModel != null) ? true : false;
 				}
-
-				model.value = dataModel;
+				// Allow for default values if the API returns null
+				model.value = dataModel || _ReactProps.value || '';
 			}
 		}
 
