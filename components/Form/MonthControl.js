@@ -84,7 +84,7 @@ class MonthControl extends React.Component {
 
     let valid = (this.props.valid && value && value.match(/^\d{4}-\d{2}$/));
 
-    if (!this.state.fallback) {
+    if (this.state.fallback) {
       const fillRange = (start, end) => {
         return Array(end - start + 1).fill().map((item, index) => start + index);
       };
