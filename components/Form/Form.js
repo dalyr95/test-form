@@ -309,6 +309,7 @@ class Form extends React.Component {
 					model.checked = (typeof dataModel != null) ? true : false;
 				}
 				// Allow for default values if the API returns null
+				// TODO - CHECK IF NULL BEFORE ASSIGNING
 				model.value = dataModel || _ReactProps.value || '';
 			}
 		}
