@@ -86,18 +86,7 @@ class Form extends React.Component {
 			let valid = true;
 			let value = $el.props.defaultValue || '';
 
-			/**
-			 * TODO - Beef this up abit, possibly use pattern?
-			 */
-			if ($el.props.required) {
-				if (value === '') {
-					valid = false;
-				}
-
-				if (['radio', 'checkbox'].includes($el.props.type)) {
-					valid = $el.props.checked || false;
-				}
-			}
+			valid = this._isElementValid($el.props);
 
 			let attributes = {
 				checked: $el.props.checked || false,
@@ -110,6 +99,27 @@ class Form extends React.Component {
 
 			return attributes;
 		}
+	}
+
+	_isElementValid(props) {
+		/**
+		 * TODO - Beef this up abit, possibly use pattern?
+		 */
+
+		let valid = true;
+		let value = props.value;
+
+		if (props.required) {
+			if (value === '') {
+				valid = false;
+			}
+
+			if (['radio', 'checkbox'].includes(props.type)) {
+				valid = props.checked || false;
+			}
+		}
+
+		return valid;
 	}
 
 	_parseDOMAttributesToReactProps(dom) {
@@ -158,6 +168,7 @@ class Form extends React.Component {
 		let DOMAttributes = this._parseDOMAttributesToReactProps(this._getDOMAttributes(e.target));
 		DOMAttributes.HTMLvalid = e.target.checkValidity();
 		DOMAttributes.value = value || DOMAttributes.value;
+		DOMAttributes.valid = this._isElementValid(DOMAttributes);
 
 		let name = this.generateFetchName(DOMAttributes);
 
@@ -311,6 +322,7 @@ class Form extends React.Component {
 
 				// Allow for default values if the API returns null
 				model.value = (dataModel != null) ? dataModel : _ReactProps.value || '';
+				model.valid = this._isElementValid(model);
 			}
 		}
 
@@ -364,8 +376,11 @@ class Form extends React.Component {
 	}
 
 	render() {
-		let formElements = [];
-		let completedFormElements = 0;
+		this._progress = {
+			total: 0,
+			completed: 0,
+			percentage: 0
+		};
 
 		let updateModel = (_ReactProps) => {
 			if (!_ReactProps) { return; }
@@ -492,6 +507,19 @@ class Form extends React.Component {
 					});
 
 					customProps.input = _values || {};
+
+					let show = child.props.condition(customProps.input);
+
+					if (show === false) {
+						return null;
+					}
+				}
+
+				if (_values) {
+					this._progress.total++;
+					if (_values.valid === true) {
+						this._progress.completed++;
+					}
 				}
 
 				if (child.type === Field) {
@@ -537,11 +565,7 @@ class Form extends React.Component {
 
 		console.info(`Render time: ${Math.round(performance.now() - time)}ms`);
 
-		this._progress = {
-			total: formElements.length,
-			completed: completedFormElements,
-			percentage: Math.round((completedFormElements / formElements.length) * 100)
-		};
+		this._progress.percentage = Math.round((this._progress.completed / this._progress.total) * 100);
 		
 		// Remove any reserved props such as update
 		let {update, persistEvents, onMount, visible, initialData, initialDataTransform, updateForm, ...props} = this.props;
