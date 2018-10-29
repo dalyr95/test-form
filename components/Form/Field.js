@@ -1,36 +1,40 @@
 class Field extends React.Component {
   constructor(props) {
-    super(props);
-  }
+		super(props);
 
-  render() {
-	  /**
-	   * TODO - wrap in a fieldset and then stopPropagation??
-	   * if (!prop.handleOwnPropagation) { <fieldset>updateParent(myself)</fieldset> }
-	   */
-    return (
-		<React.Fragment>
-			{
+		this.onChange = this.onChange.bind(this);
+	}
 
-				React.Children.map(this.props.children, (child) => {
-					// In development environment
-					if (typeof window === "object" && window.location.port) {
-						['onChange', 'onBlur'].forEach(on => {
-							if (child.type.prototype[on]) {
-								if (!child.type.prototype[on].toString().includes('stopPropagation')) {
-									console.warn('If changing `input` values programtically, be sure to include `event.stopPropagation()` and call `this.props.updateForm(e, value)` when complete.')
-								}
-							}
+	onChange(e) {
+		e.stopPropagation();
+	}
+
+	render() {
+		/**
+		 * TODO - wrap in a fieldset and then stopPropagation??
+		 * if (!prop.handleOwnPropagation) { <fieldset>updateParent(myself)</fieldset> }
+		 */
+
+		return (
+			<fieldset onChange={this.onChange}>
+				{
+					React.Children.map(this.props.children, (child) => {
+						let p = {};
+						let {updateForm, ...props} = this.props;
+						p = props;
+						if (typeof child.type !== 'string') {
+							p.updateForm = updateForm;
+						}
+
+						// In case anyone passed in a DOM element
+						// Pass `updateParent` to child component
+						return React.cloneElement(child, {
+							...child.props,
+							...p
 						});
-					}
-
-					return React.createElement(child.type, {
-						...child.props,
-						...this.props
-					});
-				})
-			}
-		</React.Fragment>
-    );
+					})
+				}
+			</fieldset>
+		);
   }
 }

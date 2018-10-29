@@ -308,9 +308,9 @@ class Form extends React.Component {
 				if (['radio', 'checkbox'].includes(model.type)) {
 					model.checked = (typeof dataModel != null) ? true : false;
 				}
+
 				// Allow for default values if the API returns null
-				// TODO - CHECK IF NULL BEFORE ASSIGNING
-				model.value = dataModel || _ReactProps.value || '';
+				model.value = (dataModel != null) ? dataModel : _ReactProps.value || '';
 			}
 		}
 
@@ -436,7 +436,16 @@ class Form extends React.Component {
 					/**
 					 * TODO - Reset any values in conditionals if closed?
 					 */
-
+					if (child.type === Field && Array.isArray(child.props.elements)) {
+						child.props.elements.forEach(el => {
+							let _ReactProps = this._getReactProps({
+								type: el.element,
+								props: el
+							}, mergeParentProps);
+							updateModel(_ReactProps);
+						});
+						return;
+					}
 					updateModel(_ReactProps);
 					generateModel(child.props.children, parentProps)
 					return;
@@ -446,7 +455,7 @@ class Form extends React.Component {
 			});
 		}
 
-		let renderWrappedChildren = (children) => {
+		let renderWrappedChildren = (children, mergeParentProps) => {
 			// Traverse through all children with pretty functional way :-)
 			return React.Children.map(children, (child) => {
 				
@@ -460,6 +469,7 @@ class Form extends React.Component {
 
 				let inputState = {};
 				let customProps = {};
+				let parentProps = mergeParentProps || {};
 
 				if (_values) {
 					// Do something if need be
@@ -485,18 +495,26 @@ class Form extends React.Component {
 				}
 
 				if (child.type === Field) {
-					customProps.updateForm = this.onChange;
+					// Make `updateForm` available to nested components
+					parentProps = Object.assign(mergeParentProps, {
+						updateForm: this.onChange
+					});
 				}
 
-				// If current component has additional children, traverse through them as well!
+				if (typeof child.type === 'function' && parentProps.updateForm) {
+					customProps.updateForm = parentProps.updateForm;
+				}
+
+				let _props = {
+					onChange: child.props.onChange || (() => {}),
+					...customProps,
+					...inputState
+				};
+
 				if (child.props.children) {
-					// You have to override also children here
-					return React.cloneElement(child, {
-						children: renderWrappedChildren(child.props.children),
-						onChange: child.props.onChange || (() => {}),
-						...customProps,
-						...inputState
-					});
+					_props.children = renderWrappedChildren(child.props.children, parentProps);
+
+					return React.cloneElement(child, _props);
 				}
 
 				// Return new component with overridden `onChange` callback

@@ -8,16 +8,14 @@ class MonthControl extends React.Component {
 
     let date = new Date();
     this._year =  date.getFullYear();
-	this._month = date.getMonth() + 1;
+    this._month = date.getMonth() + 1;
 	
-	this.state = {
-		value: this.props.value || ''
-	};
+    this.state = {
+      value: this.props.value || ''
+    };
   }
 
   onChange(e, value) {
-		e.stopPropagation();
-
 		value = value || e.currentTarget.value;
 
 		if (value) {
@@ -38,7 +36,9 @@ class MonthControl extends React.Component {
 
 		this.setState({ value: value });
 
-		this.props.updateForm(e, value);
+    if (this.props.updateForm) {
+      this.props.updateForm(e, value);
+    }
   }
 
   componentDidMount() {
@@ -53,8 +53,6 @@ class MonthControl extends React.Component {
   }
 
   onChangeFallback(e) {
-	e.stopPropagation();
-
     let value = this.state.value.split('-').filter(i => i);
 
     let month = (!isNaN(value[1])) ? value[1] : this._month.toString().padLeft(2, 0);
