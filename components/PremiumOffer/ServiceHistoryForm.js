@@ -61,25 +61,6 @@ class ServiceHistoryForm extends React.Component {
 						<MonthControl />
 					</Field>
 
-					<Field elements={[{
-							element: 'input',
-							name: 'service_date1',
-							type: 'month',
-							min: '2013-01',
-							max: "2018-11",
-							value: ""
-						},{
-							element: 'input',
-							name: 'service_date2',
-							type: 'month',
-							min: '2013-01',
-							max: "2018-11",
-							value: ""
-						}]}
-					>
-						<div>hello<div><MonthControl name="service_date1" /></div></div>
-					</Field>
-
 					<h4>What was the mileage at the last service?</h4>
 					<input name="service_mileage" type="number" min="0" />
 

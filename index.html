@@ -186,7 +186,7 @@
 					}
 
 					if (e.target) {
-						if (e.target.tagName === 'SELECT' || ['checkbox', 'radio'].includes(e.target.type)) {
+						if (e.target.tagName === 'SELECT' || ['checkbox', 'radio', 'month'].includes(e.target.type)) {
 							if (e.type === 'change') {
 								setState();
 							}

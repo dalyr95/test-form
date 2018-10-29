@@ -6,7 +6,9 @@ class Field extends React.Component {
 	}
 
 	onChange(e) {
-		e.stopPropagation();
+		if (this.props.handleOwnPropagation !== true) {
+			e.stopPropagation();
+		}
 	}
 
 	render() {
@@ -22,11 +24,12 @@ class Field extends React.Component {
 						let p = {};
 						let {updateForm, ...props} = this.props;
 						p = props;
+
+						// In case anyone passed in a DOM element as a child
 						if (typeof child.type !== 'string') {
 							p.updateForm = updateForm;
 						}
 
-						// In case anyone passed in a DOM element
 						// Pass `updateParent` to child component
 						return React.cloneElement(child, {
 							...child.props,
