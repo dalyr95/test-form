@@ -5,49 +5,40 @@ class Form extends React.Component {
 		window.Offer = window.Offer || {};
 		window.Offer[this.props.name] = this;
 
+		['onBlur', 'onChange', 'onFocus', 'onSubmit', '_ParseDom', '_getDOMAttributes', '_getReactProps', 'updateModel', 'onUpdate', 'report'].forEach(f => {
+			this[f] = this[f].bind(this);
+		});
+
 		this.$form = React.createRef();
-
-		this.onBlur = this.onBlur.bind(this);
-		this.onChange = this.onChange.bind(this);
-		this.onFocus = this.onFocus.bind(this);
-		this.onSubmit = this.onSubmit.bind(this);
-
-		this._ParseDom = this._ParseDom.bind(this);
-		this._getDOMAttributes = this._getDOMAttributes.bind(this);
-		this._getReactProps = this._getReactProps.bind(this);
-		//
-		this.updateModel = this.updateModel.bind(this);
-		this.onUpdate = this.onUpdate.bind(this);
-		this.report = this.report.bind(this);
 
 		this._DOM = {};
 		this._ReactDOM = {};
 
 		this._formElementTypes = [
-			//'button',
-			//'datalist',
 			Field, // Custom Element Component 
 			'fieldset',
 			'form',
 			'input',
-			'keygen',
+			'select',
+			'textarea',
+			//'button',
+			//'datalist',
+			//'keygen',
 			//'label',
-			'legend',
-			'meter',
+			//'legend',
+			//'meter',
 			//'optgroup',
 			//'option',
-			'output',
-			'progress',
-			'select',
-			'textarea'
+			//'output',
+			//'progress',
 		];
 
 		this.state = {
-			seen: {}
+			interacted: {}
 		};
 
-		this.__Model = {};
-		this.__ValueModel = {};
+		this.__Model = {};		// Keeps track of all input values
+		this.__ValueModel = {};	// Only concerned with values for the API
 
 		if (!this.props.onChange && !this.props.onBlur) {
 			console.warn(`No \`onChange\` or \`onBlur\` handlers are provided for \`<Form/>\` name \`${this.props.name}\`. Are you sure?`);
@@ -56,87 +47,18 @@ class Form extends React.Component {
 		if (!this.props.name) {
 			console.warn(`No \`name\` prop for \`<Form/>\` component. Are you sure?`);
 		}
-	}
 
-	_ParseDom() {
-		let $form = this.$form.current;
-		let $elements = [...$form.elements];
-
-		$elements.forEach($el => {
-			let attributes = this._getDOMAttributes($el);
-			this._DOM = this.updateModel(attributes['name'], attributes, this._DOM);
-		});
-	}
-
-	_getDOMAttributes($el) {
-		let attributes = {};
-		let attrs = $el.attributes;
-		for(var i = attrs.length - 1; i >= 0; i--) {
-			attributes[attrs[i].name] = attrs[i].value;
-		}
-
-		attributes['checked'] = $el.checked;
-		attributes['value'] = $el.value;
-
-		return attributes;
-	}
-
-	_getReactProps($el, parentProps) {
-		if (this._formElementTypes.includes($el.type)) {
-			let valid = true;
-			let value = $el.props.defaultValue || '';
-
-			valid = this._isElementValid($el.props);
-
-			let attributes = {
-				checked: $el.props.checked || false,
-				type: $el.type,
-				value: value,
-				valid: valid,
-				...$el.props,
-				...parentProps || {}
-			}
-
-			return attributes;
-		}
-	}
-
-	_isElementValid(props) {
-		/**
-		 * TODO - Beef this up abit, possibly use pattern?
-		 */
-
-		let valid = true;
-		let value = props.value;
-
-		if (props.required) {
-			if (value === '') {
-				valid = false;
-			}
-
-			if (['radio', 'checkbox'].includes(props.type)) {
-				valid = props.checked || false;
-			}
-		}
-
-		return valid;
-	}
-
-	_parseDOMAttributesToReactProps(dom) {
-		/**
-		 * `required` attribute comes back as `required === ''`
-		 */
-		dom.required = (dom.required != null) ? true : dom.required;
-		if (dom.value && ['true', 'false'].includes(dom.value)) {
-			dom.value = JSON.parse(dom.value);
-		}
-		return dom;
+		this._time = performance.now();
 	}
 
 	componentDidMount() {
 		this.hydrate(this.props.initialData, () => {
 			if (this.props.onMount) { this.props.onMount({type: 'mount'}, this.report())}
 		});
+	}
+
+	componentDidUpdate() {
+		console.log(`Start render to update`, `${Math.round(performance.now() - this._time)}ms`);
 	}
 
 	onBlur(e) {
@@ -146,18 +68,18 @@ class Form extends React.Component {
 			$focused: null
 		});
 
-		if (this.props.onBlur) { this.props.onBlur(e, this.report()); }
+		if (this.props.onBlur) { this.props.onBlur(this._parseSyntheticEvent(e), this.report()); }
 	}
 
 	onFocus(e) {
 		if (this.props.persistEvents) { e.persist(); }
 
 		this.setState({
-			seen: {...this.state.seen, [e.target.name]: true},
+			interacted: {...this.state.interacted, [e.target.name]: true},
 			$focused: e.target
 		});
 
-		if (this.props.onFocus) { this.props.onFocus(e, this.report()); }
+		if (this.props.onFocus) { this.props.onFocus(this._parseSyntheticEvent(e), this.report()); }
 	}
 
 	onChange(e, value) {
@@ -233,7 +155,7 @@ class Form extends React.Component {
 			this.updateModel(name, model.value, this.__ValueModel);
 		}
 
-		let event = this.parseSyntheticEvent(e);
+		let event = this._parseSyntheticEvent(e);
 
 		this.setState({
 			model: this.__Model
@@ -255,8 +177,17 @@ class Form extends React.Component {
 	}
 
 	report() {
+		let model = JSON.parse(JSON.stringify(this.__Model));
+		let values = {};
+		Object.entries(model).forEach(([key, value]) => {
+			if (['radio', 'checkbox'].includes(value.type)) {
+				values[key] = (value.checked) ? value.value : null;
+			} else {
+				values[key] = (value.value === '') ? null : value.value;
+			}
+		});
 		return {
-			data: JSON.parse(JSON.stringify(this.__ValueModel)),
+			data: JSON.parse(JSON.stringify(values)),
 			name: this.props.name,
 			progress: JSON.parse(JSON.stringify(this._progress))
 		};
@@ -314,15 +245,22 @@ class Form extends React.Component {
 
 				let dataModel = this.__resolveModelPath(name, hydrateData);
 
+				/**
+				 * TODO - Not hydrating properly
+				 */
 				// Allow for default values if the API returns null
+				console.log(model.name, dataModel, (dataModel != null));
 				model.value = (dataModel != null) ? dataModel : '';
 				if (['radio', 'checkbox'].includes(model.type)) {
 					model.checked = (model.value === '') ? false : true;
 
+					/**
+					 * TODO - Fix this
+					 */
 					// DEALING WITH CHECKED ATTRIBUTE ON INITIAL LOAD!!!
 					// Careful here, if there is no API value, and a checked attribute, the code
 					// wants by default for it to be checked, so let's do that!
-					if (_ReactProps.checked) {
+					if (_ReactProps.checked && model.value === '') {
 						model.checked = true;
 						model.value = _ReactProps.value;
 					}
@@ -382,6 +320,8 @@ class Form extends React.Component {
 	}
 
 	render() {
+		this._time = performance.now();
+
 		this._progress = {
 			total: {},
 			completed: {},
@@ -559,8 +499,6 @@ class Form extends React.Component {
 			});
 		}
 		
-		let time = performance.now();
-		
 		let children;
 
 		if (this.props.children) {
@@ -608,7 +546,7 @@ class Form extends React.Component {
 		return obj;
 	}
 
-	parseSyntheticEvent(e) {
+	_parseSyntheticEvent(e) {
 		return {
 			currentTarget: e.currentTarget,
 			defaultPrevented: e.defaultPrevented,
@@ -617,6 +555,81 @@ class Form extends React.Component {
 			timeStamp: e.timeStamp,
 			type: e.type
 		};
+	}
+
+	_ParseDom() {
+		let $form = this.$form.current;
+		let $elements = [...$form.elements];
+
+		$elements.forEach($el => {
+			let attributes = this._getDOMAttributes($el);
+			this._DOM = this.updateModel(attributes['name'], attributes, this._DOM);
+		});
+	}
+
+	_getDOMAttributes($el) {
+		let attributes = {};
+		let attrs = $el.attributes;
+		for(var i = attrs.length - 1; i >= 0; i--) {
+			attributes[attrs[i].name] = attrs[i].value;
+		}
+
+		attributes['checked'] = $el.checked;
+		attributes['value'] = $el.value;
+
+		return attributes;
+	}
+
+	_getReactProps($el, parentProps) {
+		if (this._formElementTypes.includes($el.type)) {
+			let valid = true;
+			let value = $el.props.defaultValue || '';
+
+			valid = this._isElementValid($el.props);
+
+			let attributes = {
+				checked: $el.props.checked || false,
+				type: $el.type,
+				value: value,
+				valid: valid,
+				...$el.props,
+				...parentProps || {}
+			}
+
+			return attributes;
+		}
+	}
+
+	_isElementValid(props) {
+		/**
+		 * TODO - Beef this up abit, possibly use pattern?
+		 */
+
+		let valid = true;
+		let value = props.value;
+
+		if (props.required) {
+			if (value === '') {
+				valid = false;
+			}
+
+			if (['radio', 'checkbox'].includes(props.type)) {
+				valid = props.checked || false;
+			}
+		}
+
+		return valid;
+	}
+
+	_parseDOMAttributesToReactProps(dom) {
+		/**
+		 * `required` attribute comes back as `required === ''`
+		 */
+		dom.required = (dom.required != null) ? true : dom.required;
+		if (dom.value && ['true', 'false'].includes(dom.value)) {
+			dom.value = JSON.parse(dom.value);
+		}
+		return dom;
 	}
 
 	__resolveModelPath(path='', obj=self, separator='.') {

@@ -82,7 +82,7 @@ class ConditionForm extends React.Component {
 				//update={this.update}
 				name='condition'
 				onMount={this.props.update}
-				//onBlur={this.props.update}
+				onBlur={this.props.update}
 				onChange={this.props.update}
 				//onFocus={this.update}
 				initialData={this.props.initialData}
