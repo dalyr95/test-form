@@ -233,12 +233,12 @@ class Form extends React.Component {
 			this.updateModel(name, model.value, this.__ValueModel);
 		}
 
-		if (this.props.onChange) { this.props.onChange(e, this.report()); }
+		let event = this.parseSyntheticEvent(e);
 
 		this.setState({
 			model: this.__Model
 		}, () => {
-			this.onUpdate();
+			if (this.props.onChange) { this.props.onChange(event, this.report()); }
 		});
 	}
 
@@ -255,12 +255,10 @@ class Form extends React.Component {
 	}
 
 	report() {
-		let model = JSON.parse(JSON.stringify(this.__ValueModel));
-
 		return {
-			data: model,
+			data: JSON.parse(JSON.stringify(this.__ValueModel)),
 			name: this.props.name,
-			progress: this._progress
+			progress: JSON.parse(JSON.stringify(this._progress))
 		};
 	}
 
@@ -316,12 +314,11 @@ class Form extends React.Component {
 
 				let dataModel = this.__resolveModelPath(name, hydrateData);
 
-				if (['radio', 'checkbox'].includes(model.type)) {
-					model.checked = (typeof dataModel != null) ? true : false;
-				}
-
 				// Allow for default values if the API returns null
-				model.value = (dataModel != null) ? dataModel : _ReactProps.value || '';
+				model.value = (dataModel != null) ? dataModel : '';
+				if (['radio', 'checkbox'].includes(model.type)) {
+					model.checked = (model.value === '') ? false : true;
+				}
 				model.valid = this._isElementValid(model);
 			}
 		}
@@ -377,8 +374,8 @@ class Form extends React.Component {
 
 	render() {
 		this._progress = {
-			total: 0,
-			completed: 0,
+			total: {},
+			completed: {},
 			percentage: 0
 		};
 
@@ -516,9 +513,9 @@ class Form extends React.Component {
 				}
 
 				if (_values) {
-					this._progress.total++;
-					if (_values.valid === true) {
-						this._progress.completed++;
+					if (_values.required === true) {
+						this._progress.total[_values.name] = true;
+						if (_values.valid === true) { this._progress.completed[_values.name] = true; }
 					}
 				}
 
@@ -565,7 +562,10 @@ class Form extends React.Component {
 
 		console.info(`Render time: ${Math.round(performance.now() - time)}ms`);
 
+		this._progress.completed = Object.keys(this._progress.completed).length;
+		this._progress.total = Object.keys(this._progress.total).length;
 		this._progress.percentage = Math.round((this._progress.completed / this._progress.total) * 100);
+		this._progress.percentage = Number.isInteger(this._progress.percentage) ? this._progress.percentage : 100;
 		
 		// Remove any reserved props such as update
 		let {update, persistEvents, onMount, visible, initialData, initialDataTransform, updateForm, ...props} = this.props;
@@ -600,6 +600,17 @@ class Form extends React.Component {
 		}, obj);
 
 		return obj;
+	}
+
+	parseSyntheticEvent(e) {
+		return {
+			currentTarget: e.currentTarget,
+			defaultPrevented: e.defaultPrevented,
+			isTrusted: e.isTrusted,
+			target: e.target,
+			timeStamp: e.timeStamp,
+			type: e.type
+		};
 	}
 
 	__resolveModelPath(path='', obj=self, separator='.') {

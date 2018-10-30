@@ -58,9 +58,9 @@ class WheelsAndTyresForm extends React.Component {
 						return (
 							<React.Fragment key={`${i.label}-${i.field}`}>
 								<h4>{i.label}</h4>
-								<input id={`${i.field}_0`} type="radio" name={i.field} value="true"/>
+								<input id={`${i.field}_0`} type="radio" name={i.field} value="true" required />
 								<label htmlFor={`${i.field}_0`}>Yes</label>
-								<input id={`${i.field}_1`} type="radio" name={i.field} value="false" checked required/>
+								<input id={`${i.field}_1`} type="radio" name={i.field} value="false" checked required />
 								<label htmlFor={`${i.field}_1`}>No</label>
 								<Conditional
 									name={i.field}
@@ -80,7 +80,7 @@ class WheelsAndTyresForm extends React.Component {
 						return (
 							<React.Fragment key={`${i.label}-${i.field}`}>
 								<h4>{i.label}</h4>
-								<input id={`${i.field}_0`} type="radio" name={i.field} value="true"/>
+								<input id={`${i.field}_0`} type="radio" name={i.field} value="true" required/>
 								<label htmlFor={`${i.field}_0`}>Yes</label>
 								<input id={`${i.field}_1`} type="radio" name={i.field} value="false" checked required/>
 								<label htmlFor={`${i.field}_1`}>No</label>
