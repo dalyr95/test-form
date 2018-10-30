@@ -266,7 +266,7 @@ class Form extends React.Component {
 		if (this.props.initialDataTransform) {
 			hydrateData = this.props.initialDataTransform(hydrateData);
 		}
-
+		return;
 		let getModel = (_ReactProps, model) => {
 			if (!_ReactProps) { return; }
 
@@ -395,7 +395,7 @@ class Form extends React.Component {
 
 			// Remove anything not needed
 			let {children, ..._Props} = _ReactProps;
-
+			console.log(_Props.name, _Props);
 			this.updateModel(name, _Props, this.__Model);
 
 			if (_Props.fieldset) {
