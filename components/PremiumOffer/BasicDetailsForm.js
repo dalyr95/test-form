@@ -3,7 +3,9 @@ class BasicDetailsForm extends React.Component {
 		super(props);
 	}
 
-	initialDataTransform(initialData) {
+	initialDataTransform(initialData={}) {
+		if (!initialData) { return {}; }
+
 		if (!initialData['num_keys']) {
 			initialData['num_keys0'] = 'none';
 		} else {

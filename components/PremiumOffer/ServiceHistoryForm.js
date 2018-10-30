@@ -3,7 +3,9 @@ class ServiceHistoryForm extends React.Component {
 		super(props);
 	}
 
-	initialDataTransform(initialData) {
+	initialDataTransform(initialData={}) {
+		if (!initialData) { return {}; }
+
 		if (initialData['service_date']) {
 			let match = initialData['service_date'].match(/^[0-9]{4}-[0-9]{2}/);
 			initialData['service_date'] = (match) ? match[0] : '';

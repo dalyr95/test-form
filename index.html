@@ -81,7 +81,7 @@
 				height: 0;
 				left: 0;
 				position: absolute;
-				transition: 0.4s linear height;
+				transition: 0.2s linear height;
 				width: 100%;
 			}
 
@@ -185,15 +185,18 @@
 				}
 				
 				update(e, data) {
+					this.state.progress[data.name] = data.progress;
+
+					this.setState({
+						progress: this.state.progress
+					});
+
 					let setState = () => {
 						let offer = Object.assign({}, this.state.offer);
 						offer[data.name] = data.data;
 
-						this.state.progress[data.name] = data.progress;
-
 						this.setState({
-							offer,
-							progress: this.state.progress
+							offer
 						});
 
 						console.log(`%c${e.type} event`, 'font-weight: bold; text-decoration: underline; text-transform: capitalize; ', 'Sending to API =>', offer);
@@ -209,12 +212,6 @@
 						}
 						return;
 					}
-
-					this.state.progress[data.name] = data.progress;
-
-					this.setState({
-						progress: this.state.progress
-					});
 				}
 
 				async componentDidMount() {

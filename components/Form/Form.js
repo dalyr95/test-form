@@ -134,10 +134,9 @@ class Form extends React.Component {
 	}
 
 	componentDidMount() {
-		if (this.props.initialData) {
-			this.hydrate(this.props.initialData);
-		}
-		if (this.props.onMount) { this.props.onMount({type: 'mount'}, this.report())}
+		this.hydrate(this.props.initialData, () => {
+			if (this.props.onMount) { this.props.onMount({type: 'mount'}, this.report())}
+		});
 	}
 
 	onBlur(e) {
@@ -208,6 +207,7 @@ class Form extends React.Component {
 				} else {
 					/**
 					 * TODO - Sort this condition out
+					 * If there's a group of text inputs for example, which need their values into an array
 					 */
 				}
 			} else {
@@ -262,11 +262,11 @@ class Form extends React.Component {
 		};
 	}
 
-	hydrate(hydrateData) {
+	hydrate(hydrateData={}, cb=() => {}) {
 		if (this.props.initialDataTransform) {
 			hydrateData = this.props.initialDataTransform(hydrateData);
 		}
-		return;
+
 		let getModel = (_ReactProps, model) => {
 			if (!_ReactProps) { return; }
 
@@ -318,7 +318,16 @@ class Form extends React.Component {
 				model.value = (dataModel != null) ? dataModel : '';
 				if (['radio', 'checkbox'].includes(model.type)) {
 					model.checked = (model.value === '') ? false : true;
+
+					// DEALING WITH CHECKED ATTRIBUTE ON INITIAL LOAD!!!
+					// Careful here, if there is no API value, and a checked attribute, the code
+					// wants by default for it to be checked, so let's do that!
+					if (_ReactProps.checked) {
+						model.checked = true;
+						model.value = _ReactProps.value;
+					}
 				}
+
 				model.valid = this._isElementValid(model);
 			}
 		}
@@ -365,7 +374,7 @@ class Form extends React.Component {
 
 		this.setState({
 			model: this.__Model
-		});
+		}, cb);
 	}
 
 	generateFetchName = (_ReactProps) => {
@@ -395,7 +404,7 @@ class Form extends React.Component {
 
 			// Remove anything not needed
 			let {children, ..._Props} = _ReactProps;
-			console.log(_Props.name, _Props);
+
 			this.updateModel(name, _Props, this.__Model);
 
 			if (_Props.fieldset) {
@@ -485,7 +494,6 @@ class Form extends React.Component {
 
 				if (_values) {
 					// Do something if need be
-
 					if (child.type === 'input' && ['radio', 'checkbox'].includes(child.props.type)) {
 						if (child.props.type === 'radio' && _values.checked) {
 							inputState.checked = (_values.value != null) ? (_values.value.toString() === child.props.value.toString()) : false;
@@ -560,13 +568,11 @@ class Form extends React.Component {
 			children = renderWrappedChildren(this.props.children);
 		}
 
-		console.info(`Render time: ${Math.round(performance.now() - time)}ms`);
-
 		this._progress.completed = Object.keys(this._progress.completed).length;
 		this._progress.total = Object.keys(this._progress.total).length;
 		this._progress.percentage = Math.round((this._progress.completed / this._progress.total) * 100);
 		this._progress.percentage = Number.isInteger(this._progress.percentage) ? this._progress.percentage : 100;
-		
+
 		// Remove any reserved props such as update
 		let {update, persistEvents, onMount, visible, initialData, initialDataTransform, updateForm, ...props} = this.props;
 

@@ -45,7 +45,7 @@ class WheelsAndTyresForm extends React.Component {
 				name='wheels_and_tyres'
 				onMount={this.props.update}
 				onBlur={this.props.update}
-				onChange={this.update}
+				onChange={this.props.update}
 				initialData={this.props.initialData}
 				//onFocus={this.update}
 				persistEvents={false} // Has a performance impact, only use if you need event data
@@ -68,7 +68,7 @@ class WheelsAndTyresForm extends React.Component {
 										return (input.checked && input.value === true);
 									}}
 								>
-									<textarea name={`${i.details.field}`} placeholder={i.details.placeholder}></textarea>
+									<textarea name={`${i.details.field}`} placeholder={i.details.placeholder} required></textarea>
 								</Conditional>
 							</React.Fragment>
 						)
