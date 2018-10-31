@@ -132,7 +132,8 @@ class Form extends React.Component {
 		return {
 			data: this._transformReactPropsToValues(),
 			name: this.props.name,
-			progress: JSON.parse(JSON.stringify(this._progress))
+			progress: JSON.parse(JSON.stringify(this._progress)),
+			raw: JSON.parse(JSON.stringify(this.__Model))
 		};
 	}
 

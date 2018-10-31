@@ -16,6 +16,7 @@
 		<script src="/components/Form/Form.js" type="text/babel"></script>
 		<script src="/components/Form/Field.js" type="text/babel"></script>
 		<script src="/components/Form/MonthControl.js" type="text/babel"></script>
+		<script src="/components/Form/Summary.js" type="text/babel"></script>
 
 		<script src="/components/PremiumOffer/BasicDetailsForm.js" type="text/babel"></script>
 		<script src="/components/PremiumOffer/ServiceHistoryForm.js" type="text/babel"></script>
@@ -42,12 +43,36 @@
 				font-family: Arial;
 				margin: 0 auto;
 				padding: 0;
-				max-width: 840px;
 				width: 100%;
 			}
 
 			body {
+				padding: 0;
+			}
+			
+			.container {
+				display: flex;
+			}
+
+			.forms {
+				border-right: 1px solid #ccc;
+				width: 60%;
 				padding: 20px;
+			}
+
+			.summary {
+				width: 40%;
+				padding: 20px;
+			}
+
+			.summary ul {
+				list-style-type: none;
+				padding: 0;
+			}
+
+			.summary ul li {
+				border-bottom: 1px solid #ccc;
+				padding: 4px 0;
 			}
 
 			form > div {
@@ -56,9 +81,10 @@
 
 			.progress {
 				background-color: rgba(255, 255, 255, 0.8);
+				border-bottom: 1px solid #ccc;
 				display: flex;
 				justify-content: space-between;
-				padding: 10px 0;
+				padding: 20px;
 				position: sticky;
 				top: 0;
 			}
@@ -140,10 +166,11 @@
             class Page extends React.Component {
                 constructor(props) {
 					super(props);
-
+					window.shit = this;
 					this.update = this.update.bind(this);
 
 					this.state = {
+						raw: {},
 						progress: {},
 						loading: true
 					};
@@ -151,8 +178,10 @@
 				
 				update(e, data) {
 					this.state.progress[data.name] = data.progress;
+					this.state.raw[data.name] = data.raw;
 
 					this.setState({
+						raw: this.state.raw,
 						progress: this.state.progress
 					});
 
@@ -161,7 +190,7 @@
 						offer[data.name] = data.data;
 
 						this.setState({
-							offer
+							offer,
 						}, () => {
 							console.log(`%c${e.type} event`, 'font-weight: bold; text-decoration: underline; text-transform: capitalize; ', 'Sending to API =>', offer);
 
@@ -237,16 +266,23 @@
 										)
 									})
 								}
-							</div>	
-							<BasicDetailsForm update={this.update} initialData={this.state.initialData.data.basic_details} fields={this.state.initialData.fields}/>
-							<hr/>
-							<ServiceHistoryForm update={this.update} initialData={this.state.initialData.data.service_history} />
-							<hr/>
-							<ConditionForm update={this.update} initialData={this.state.initialData.data.condition} />
-							<hr/>
-							<WheelsAndTyresForm update={this.update} initialData={this.state.initialData.data.wheels_and_tyres} />
-							<hr/>
-							Photos do HTML pickup
+							</div>
+							<div className="container">
+								<div className="forms">
+									<BasicDetailsForm update={this.update} initialData={this.state.initialData.data.basic_details} fields={this.state.initialData.fields}/>
+									<hr/>
+									<ServiceHistoryForm update={this.update} initialData={this.state.initialData.data.service_history} />
+									<hr/>
+									<ConditionForm update={this.update} initialData={this.state.initialData.data.condition} />
+									<hr/>
+									<WheelsAndTyresForm update={this.update} initialData={this.state.initialData.data.wheels_and_tyres} />
+									<hr/>
+									Photos do HTML pickup
+								</div>
+								<div className="summary">
+									<Summary data={this.state.raw} offer={this.state.offer} />
+								</div>
+							</div>
 						</React.Fragment>
 					);
 				}
