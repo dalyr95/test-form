@@ -13,8 +13,8 @@ class Field extends React.Component {
 
 	render() {
 		/**
-		 * TODO - wrap in a fieldset and then stopPropagation??
-		 * if (!prop.handleOwnPropagation) { <fieldset>updateParent(myself)</fieldset> }
+		 * Check children of Field for inputs and pass on values correctly
+		 * In updateModel in Form, the existing model already exists, so do we want to nuke this field or what?
 		 */
 
 		return (
@@ -22,12 +22,10 @@ class Field extends React.Component {
 				{
 					React.Children.map(this.props.children, (child) => {
 						let p = {};
-						let {updateForm, ...props} = this.props;
-						p = props;
 
 						// In case anyone passed in a DOM element as a child
 						if (typeof child.type !== 'string') {
-							p.updateForm = updateForm;
+							p = this.props;
 						}
 
 						// Pass `updateParent` to child component

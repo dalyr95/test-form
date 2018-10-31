@@ -31,7 +31,9 @@ class BasicDetailsForm extends React.Component {
 				<React.Fragment>
 					<h2>Basic details</h2>
 					<h4>Does your car have any of these features?</h4>
-					<Fieldset name="equipment" serialization="array">
+					<Fieldset name="equipment" serialization="array" meta={{summary: {
+						label: 'Features'
+					}}}>
 						<input id="equipment_0" type="checkbox" value="sat_nav"/><label htmlFor="equipment_0">Sat nav</label>
 						<input id="equipment_1" type="checkbox" value="panoramic_roof"/><label htmlFor="equipment_1">Panoramic roof / sun roof</label>
 						<input id="equipment_2" type="checkbox" value="heated_seats"/><label htmlFor="equipment_2">Heated seats</label>
@@ -76,11 +78,16 @@ class BasicDetailsForm extends React.Component {
 					</label>
 
 					<h4>Do you have two working keys for the car?</h4>
+					
+					<Field name="num_keys0" handleOwnPropagation={true} meta={{summary: {
+						label: 'Number of keys'
+					}}}>
+						<input id="num_keys_0___0" type="radio" name="num_keys0" value="2" required/>
+						<label htmlFor="num_keys_0___0">Yes</label>
+						<input id="num_keys_1___0" type="radio" name="num_keys0" value="none" required/>
+						<label htmlFor="num_keys_1___0">No</label>
+					</Field>
 
-					<input id="num_keys_0___0" type="radio" name="num_keys0" value="2" required/>
-					<label htmlFor="num_keys_0___0">Yes</label>
-					<input id="num_keys_1___0" type="radio" name="num_keys0" value="none" required/>
-					<label htmlFor="num_keys_1___0">No</label>
 					<Conditional
 							name="num_keys0"
 							condition={(input) => {
@@ -94,6 +101,23 @@ class BasicDetailsForm extends React.Component {
 						<label htmlFor="num_keys_1___1">1</label>
 						<input id="num_keys_2___1" type="radio" name="num_keys1" value="3" required />
 						<label htmlFor="num_keys_2___1">3+</label>
+
+						{
+							/*
+							// TODO - Hide this properly in the summary and pass on values to it
+						<Field name="num_keys1" handleOwnPropagation={true} meta={{summary: {
+							label: 'Number of keys 1'
+						}}}>
+						<h4>How many working keys do you have?</h4>
+						<input id="num_keys_0___1" type="radio" name="num_keys1" value="0" required />
+						<label htmlFor="num_keys_0___1">None</label>
+						<input id="num_keys_1___1" type="radio" name="num_keys1" value="1" required />
+						<label htmlFor="num_keys_1___1">1</label>
+						<input id="num_keys_2___1" type="radio" name="num_keys1" value="3" required />
+						<label htmlFor="num_keys_2___1">3+</label>
+						</Field>
+							*/
+						}
 					</Conditional>
 
 					<h4>Do you have the V5C logbook?</h4>

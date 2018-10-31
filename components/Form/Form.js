@@ -257,6 +257,8 @@ class Form extends React.Component {
 	render() {
 		this._time = performance.now();
 
+		let _tabIndex = 0; // Keep track of order of questions for summary
+
 		this._progress = {
 			total: {},
 			completed: {},
@@ -267,6 +269,8 @@ class Form extends React.Component {
 			if (!_ReactProps) { return; }
 			
 			let name = this.generateFetchName(_ReactProps);
+
+			_ReactProps.tabIndex =  _tabIndex++ + 1; // Keep track of order of questions for summary
 
 			let existingModel = getModel(_ReactProps);
 
@@ -320,19 +324,22 @@ class Form extends React.Component {
 						parentProps = {};
 						parentProps = Object.assign(mergeParentProps || {}, {
 							fieldset: child.props.name,
-							serialization: child.props.serialization
+							serialization: child.props.serialization,
+							meta: child.props.meta
 						});
 					}
 
-					if (child.type === Field && Array.isArray(child.props.elements)) {
-						child.props.elements.forEach(el => {
-							let _ReactProps = this._getReactProps({
-								type: el.element,
-								props: el
-							}, mergeParentProps);
-							updateModel(_ReactProps);
-						});
-						return;
+					if (child.type === Field) {
+						if (Array.isArray(child.props.elements)) {
+							child.props.elements.forEach(el => {
+								let _ReactProps = this._getReactProps({
+									type: el.element,
+									props: el
+								}, mergeParentProps);
+								updateModel(_ReactProps);
+							});
+							return;
+						}
 					}
 
 					/**
@@ -352,9 +359,7 @@ class Form extends React.Component {
 					generateModel(child.props.children, parentProps);
 					return;
 				}
-				if (_ReactProps && _ReactProps.name === 'cambelt_changed') {
-					//console.log(2, _ReactProps, mergeParentProps);
-				}
+
 				updateModel(_ReactProps);
 			});
 		}
