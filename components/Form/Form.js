@@ -272,7 +272,13 @@ class Form extends React.Component {
 
 			// If model already exists we're not interested in going over it again
 			// Onchange will deal with any updates to it
-			if (Object.keys(existingModel || {}).length > 0) { return; }
+			if (Object.keys(existingModel || {}).length > 0) {
+				// HACK - Conditional show states aren't being updated
+				if (_ReactProps.shown !== existingModel.shown) {
+					existingModel.shown = _ReactProps.shown;
+				}
+				return;
+			}
 
 			if (!name) {
 				console.error(`Element \`${_ReactProps.type}\` does not have a name or id`, _ReactProps);
@@ -318,9 +324,6 @@ class Form extends React.Component {
 						});
 					}
 
-					/**
-					 * TODO - Reset any values in conditionals if closed?
-					 */
 					if (child.type === Field && Array.isArray(child.props.elements)) {
 						child.props.elements.forEach(el => {
 							let _ReactProps = this._getReactProps({
@@ -331,11 +334,27 @@ class Form extends React.Component {
 						});
 						return;
 					}
+
+					/**
+					 * TODO - Reset any values in conditionals if closed?
+					 */
+					if (child.type === Conditional) {
+						// If conditional prevents conditional's conditional children from passing their own tests and being shown = true
+						let shown = (mergeParentProps && mergeParentProps.shown === false) ? false : child.props.condition(getModel({
+							name: child.props.name
+						}));
+
+						parentProps = Object.assign(mergeParentProps || {}, {
+							shown: shown
+						});
+					}
 					updateModel(_ReactProps);
-					generateModel(child.props.children, parentProps)
+					generateModel(child.props.children, parentProps);
 					return;
 				}
-
+				if (_ReactProps && _ReactProps.name === 'cambelt_changed') {
+					//console.log(2, _ReactProps, mergeParentProps);
+				}
 				updateModel(_ReactProps);
 			});
 		}
@@ -521,6 +540,7 @@ class Form extends React.Component {
 				type: $el.type,
 				value: value,
 				valid: valid,
+				shown: true,
 				...$el.props,
 				...parentProps || {}
 			}

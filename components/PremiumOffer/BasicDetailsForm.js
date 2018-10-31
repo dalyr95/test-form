@@ -54,7 +54,7 @@ class BasicDetailsForm extends React.Component {
 					<h4>What colour are the seats?</h4>
 					<label>
 						<select name="seat_color" required>
-							<option value="" disabled="">Select a colour</option>
+							<option value="" disabled={true}>Select a colour</option>
 							{
 								this.props.fields.seat_color.map(f => {
 									return (<option key={f.value} name={f.value} value={f.value}>{f.text}</option>);
@@ -66,8 +66,7 @@ class BasicDetailsForm extends React.Component {
 					<h4>How are they upholstered?</h4>
 					<label className="select">
 						<select name="seat_fabric" required>
-							<option value="" disabled="">Select fabric</option>
-							<option value="" disabled="">Select a colour</option>
+							<option value="" disabled={true}>Select a colour</option>
 							{
 								this.props.fields.seat_fabric.map(f => {
 									return (<option key={f.value} name={f.value} value={f.value}>{f.text}</option>);
