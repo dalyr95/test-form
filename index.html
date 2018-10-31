@@ -136,41 +136,6 @@
 	<body>
 		<div id="root"></div>
 
-		<script>
-			/**
-			 * Deep merge two objects.
-			 * @param target
-			 * @param ...sources
-			 */
-			function mergeDeep(target, ...sources) {
-				if (!sources.length) return target;
-
-				/**
-				 * Simple object check.
-				 * @param item
-				 * @returns {boolean}
-				 */
-				function isObject(item) {
-					return (item && typeof item === 'object' && !Array.isArray(item));
-				}
-
-				const source = sources.shift();
-
-				if (isObject(target) && isObject(source)) {
-					for (const key in source) {
-						if (isObject(source[key])) {
-							if (!target[key]) Object.assign(target, { [key]: {} });
-							mergeDeep(target[key], source[key]);
-						} else {
-							Object.assign(target, { [key]: source[key] });
-						}
-					}
-				}
-
-				return mergeDeep(target, ...sources);
-			}
-		</script>
-
 		<script type="text/babel">
             class Page extends React.Component {
                 constructor(props) {
@@ -231,21 +196,9 @@
 				}
 
 				async componentDidMount() {
-					/*
-					let offer = await fetch('/offer.json')
-										.then(resp => resp.json())
-										.then((offer) => {
-											this.setState({
-												loading: false,
-												offer: offer.data,
-												initialData: offer
-											}, () => {
-												console.log(offer);
-											});
-										});
-					*/
-					//fetch("https://motorway-platform-stage.herokuapp.com/api/premium-offer?vrm=RD1", {"credentials":"omit","headers":{"x-access-token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InJvYitzdG95YTEyM0Btb3RvcndheS5jby51ayIsInBvc3Rjb2RlIjoiVzM2QVciLCJpYXQiOjE1NDA2Mzc2MDQsImV4cCI6MTU0MzIyOTYwNH0.2jUiyrZkH-EC0F0LJ-1U2LPQL0-S-_-GuWox2_XSwqM"},"body":null,"method":"GET","mode":"no-cors"})
-					fetch("http://192.168.86.95:3030/api/premium-offer?vrm=6TS", {"credentials":"omit","headers":{"x-access-token":accessToken},"body":null,"method":"GET","mode":"cors"})
+					//fetch("https://motorway-platform-stage.herokuapp.com/api/premium-offer?vrm=RD1", {"credentials":"omit","headers":{"x-access-token":accessToken},"body":null,"method":"GET","mode":"no-cors"})
+					//fetch("http://192.168.86.95:3030/api/premium-offer?vrm=6TS", {"credentials":"omit","headers":{"x-access-token":accessToken},"body":null,"method":"GET","mode":"cors"})
+					fetch('/offer.json')
 					.then(resp => resp.json())
 					.then((offer) => {
 						this.setState({

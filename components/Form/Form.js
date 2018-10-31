@@ -5,7 +5,7 @@ class Form extends React.Component {
 		window.Offer = window.Offer || {};
 		window.Offer[this.props.name] = this;
 
-		['onBlur', 'onChange', 'onFocus', 'onSubmit', '_ParseDom', '_getDOMAttributes', '_getReactProps', 'updateModel', 'onUpdate', 'report'].forEach(f => {
+		['onBlur', 'onChange', 'onFocus', 'onSubmit', '_parseDom', '_getDOMAttributes', '_transformReactPropsToValues', '_getReactProps', 'updateModel', 'onUpdate', 'report'].forEach(f => {
 			this[f] = this[f].bind(this);
 		});
 
@@ -58,7 +58,7 @@ class Form extends React.Component {
 	}
 
 	componentDidUpdate() {
-		console.log(`Start render to update`, `${Math.round(performance.now() - this._time)}ms`);
+		//console.log(`Start render to update for \`${this.props.name}\``, `${Math.round(performance.now() - this._time)}ms`);
 	}
 
 	onBlur(e) {
@@ -99,7 +99,7 @@ class Form extends React.Component {
 		}
 
 		let model = this.__resolveModelPath(name, this.__Model);
-		model = mergeDeep(model, DOMAttributes);
+		model = this.__mergeDeep(model, DOMAttributes);
 
 		this.__Model = this.updateModel(name, model, this.__Model);
 
@@ -177,17 +177,8 @@ class Form extends React.Component {
 	}
 
 	report() {
-		let model = JSON.parse(JSON.stringify(this.__Model));
-		let values = {};
-		Object.entries(model).forEach(([key, value]) => {
-			if (['radio', 'checkbox'].includes(value.type)) {
-				values[key] = (value.checked) ? value.value : null;
-			} else {
-				values[key] = (value.value === '') ? null : value.value;
-			}
-		});
 		return {
-			data: JSON.parse(JSON.stringify(values)),
+			data: this._transformReactPropsToValues(),
 			name: this.props.name,
 			progress: JSON.parse(JSON.stringify(this._progress))
 		};
@@ -249,7 +240,7 @@ class Form extends React.Component {
 				 * TODO - Not hydrating properly
 				 */
 				// Allow for default values if the API returns null
-				console.log(model.name, dataModel, (dataModel != null));
+				//console.log(model.name, dataModel, (dataModel != null));
 				model.value = (dataModel != null) ? dataModel : '';
 				if (['radio', 'checkbox'].includes(model.type)) {
 					model.checked = (model.value === '') ? false : true;
@@ -557,7 +548,7 @@ class Form extends React.Component {
 		};
 	}
 
-	_ParseDom() {
+	_parseDom() {
 		let $form = this.$form.current;
 		let $elements = [...$form.elements];
 
@@ -632,9 +623,70 @@ class Form extends React.Component {
 		return dom;
 	}
 
+	_transformReactPropsToValues() {
+		let model = JSON.parse(JSON.stringify(this.__Model));
+		let values = {};
+
+		let fieldsets = {};
+
+		Object.entries(model).forEach(([key, value]) => {
+			let v;
+
+			if (['radio', 'checkbox'].includes(value.type)) {
+				v = (value.checked) ? value.value : null;
+			} else {
+				v = (value.value === '') ? null : value.value;
+			}
+
+			if (value.fieldset) {
+				var starter = (value.serialization === 'array') ? [] : {};
+				fieldsets[value.fieldset] = fieldsets[value.fieldset] || starter;
+
+				if (value.serialization === 'array') {
+					fieldsets[value.fieldset].push(v);
+				} else {
+					fieldsets[value.fieldset][this.generateFetchName(value)] = v;
+				}
+
+				return;
+			}
+
+			values[key] = v;
+		});
+
+		Object.keys(fieldsets).forEach(k => {
+			values[k] = fieldsets[k];
+		})
+
+		return values;
+	}
+
 	__resolveModelPath(path='', obj=self, separator='.') {
 		var properties = Array.isArray(path) ? path : path.split(separator);
 		if (properties[0] === 'fieldset') { properties.shift(); }
 		return properties.reduce((prev, curr) => prev && prev[curr], obj)
+	}
+
+	__mergeDeep(target, ...sources) {
+		if (!sources.length) return target;
+
+		function isObject(item) {
+			return (item && typeof item === 'object' && !Array.isArray(item));
+		}
+
+		const source = sources.shift();
+
+		if (isObject(target) && isObject(source)) {
+			for (const key in source) {
+				if (isObject(source[key])) {
+					if (!target[key]) Object.assign(target, { [key]: {} });
+					this.__mergeDeep(target[key], source[key]);
+				} else {
+					Object.assign(target, { [key]: source[key] });
+				}
+			}
+		}
+
+		return this.__mergeDeep(target, ...sources);
 	}
 }
