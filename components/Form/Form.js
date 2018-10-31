@@ -38,7 +38,6 @@ class Form extends React.Component {
 		};
 
 		this.__Model = {};		// Keeps track of all input values
-		this.__ValueModel = {};	// Only concerned with values for the API
 
 		if (!this.props.onChange && !this.props.onBlur) {
 			console.warn(`No \`onChange\` or \`onBlur\` handlers are provided for \`<Form/>\` name \`${this.props.name}\`. Are you sure?`);
@@ -108,53 +107,6 @@ class Form extends React.Component {
 			return;
 		}
 
-		if (model.fieldset) {
-			let fieldsetName = model.fieldset;
-			let fieldset = this.__resolveModelPath(fieldsetName, this.__ValueModel);
-			let useChecked = ['radio', 'checkbox'].includes(model.type);
-
-			if (model.serialization === 'array') {
-				let arr;
-				if (useChecked) {
-					if (model.checked) {
-						fieldset.push(model.value);
-						arr = fieldset;
-					} else {
-						arr = fieldset.filter(f => {
-							return (f !== model.value)
-						});
-					}
-					
-					this.updateModel(fieldsetName, arr, this.__ValueModel);
-				} else {
-					/**
-					 * TODO - Sort this condition out
-					 * If there's a group of text inputs for example, which need their values into an array
-					 */
-				}
-			} else {
-				let vector = (model.value) ? model.value : null;
-
-				if (useChecked) {
-					if (model.checked) {
-						fieldset[name] = model.value;
-					} else {
-						delete fieldset[name];
-					}
-				} else {
-					if (vector) {
-						fieldset[name] = model.value;
-					} else {
-						delete fieldset[name];
-					}
-				}
-
-				this.updateModel(fieldsetName, fieldset, this.__ValueModel);
-			}
-		} else {
-			this.updateModel(name, model.value, this.__ValueModel);
-		}
-
 		let event = this._parseSyntheticEvent(e);
 
 		this.setState({
@@ -205,14 +157,16 @@ class Form extends React.Component {
 			if (_ReactProps.fieldset) {
 				let fieldset = this.__resolveModelPath(_ReactProps.fieldset, hydrateData) || {};
 				let modelModel = getModel(_ReactProps, this.__Model);
-				let valueModel = getModel(_ReactProps.fieldset, this.__ValueModel);
 
 				if (Array.isArray(fieldset)) {
-					// Assuming fieldset arrays would be checkboxes as it's a boolean essentially
+					/**
+					 * TODO - Check what the type is and set checked or value accordingly
+					 * Assuming atm fieldset arrays would be checkboxes as it's a boolean essentially
+					 * But could easily be a row of input text
+					 */
 					fieldset.forEach(f => {
 						if (_ReactProps.value === f) {
 							modelModel.checked = true;
-							valueModel.push(modelModel.value);
 						}
 					});
 				} else {
@@ -236,18 +190,11 @@ class Form extends React.Component {
 
 				let dataModel = this.__resolveModelPath(name, hydrateData);
 
-				/**
-				 * TODO - Not hydrating properly
-				 */
 				// Allow for default values if the API returns null
-				//console.log(model.name, dataModel, (dataModel != null));
 				model.value = (dataModel != null) ? dataModel : '';
 				if (['radio', 'checkbox'].includes(model.type)) {
 					model.checked = (model.value === '') ? false : true;
 
-					/**
-					 * TODO - Fix this
-					 */
 					// DEALING WITH CHECKED ATTRIBUTE ON INITIAL LOAD!!!
 					// Careful here, if there is no API value, and a checked attribute, the code
 					// wants by default for it to be checked, so let's do that!
@@ -262,13 +209,13 @@ class Form extends React.Component {
 		}
 
 		let generateModel = (children, mergeParentProps) => {
-			// Traverse through all children with pretty functional way :-)
 			return React.Children.map(children, (child) => {
 				// This is support for non-node elements (eg. pure text), they have no props
 				if (!child || !child.props) {
 					return child;
 				}
 
+				// Get the props off the child element, such as name, type etc
 				let _ReactProps = this._getReactProps(child, mergeParentProps);
 
 				// If current component has additional children, traverse through them as well!
@@ -306,10 +253,6 @@ class Form extends React.Component {
 		}, cb);
 	}
 
-	generateFetchName = (_ReactProps) => {
-		return (typeof _ReactProps === 'string') ? _ReactProps : _ReactProps.name || _ReactProps.id;
-	}
-
 	render() {
 		this._time = performance.now();
 
@@ -326,6 +269,8 @@ class Form extends React.Component {
 
 			let existingModel = getModel(_ReactProps);
 
+			// If model already exists we're not interested in going over it again
+			// Onchange will deal with any updates to it
 			if (Object.keys(existingModel || {}).length > 0) { return; }
 
 			if (!name) {
@@ -337,19 +282,6 @@ class Form extends React.Component {
 			let {children, ..._Props} = _ReactProps;
 
 			this.updateModel(name, _Props, this.__Model);
-
-			if (_Props.fieldset) {
-				let fieldset = getModel(_Props.fieldset);
-
-				if (Array.isArray(fieldset) || Object.keys(fieldset).length === 0) {
-					fieldset = (_Props.serialization === 'array') ? [] : {};
-				}
-
-				this.updateModel(_Props.fieldset, fieldset, this.__ValueModel);
-			} else {
-				let value = (['radio', 'checkbox'].includes(_Props.type)) ? _Props.checked : (_Props.value) ? _Props.value : null;
-				this.updateModel(name, value, this.__ValueModel);
-			}
 		};
 
 		let getModel = (_ReactProps) => {
@@ -361,13 +293,13 @@ class Form extends React.Component {
 		};
 
 		let generateModel = (children, mergeParentProps) => {
-			// Traverse through all children with pretty functional way :-)
 			return React.Children.map(children, (child) => {
 				// This is support for non-node elements (eg. pure text), they have no props
 				if (!child || !child.props) {
 					return child;
 				}
-				
+
+				// Get the props off the child element, such as name, type etc
 				let _ReactProps = this._getReactProps(child, mergeParentProps);
 
 				// If current component has additional children, traverse through them as well!
@@ -408,7 +340,6 @@ class Form extends React.Component {
 		}
 
 		let renderWrappedChildren = (children, mergeParentProps) => {
-			// Traverse through all children with pretty functional way :-)
 			return React.Children.map(children, (child) => {
 				
 				// This is support for non-node elements (eg. pure text), they have no props
@@ -437,6 +368,7 @@ class Form extends React.Component {
 					}
 				}
 
+				// Display Error && Conditional components
 				if (child.type === Error || child.type === Conditional) {
 					let _values = getModel({
 						name: child.props.name
@@ -451,6 +383,7 @@ class Form extends React.Component {
 					}
 				}
 
+				// Work out progress
 				if (_values) {
 					if (_values.required === true) {
 						this._progress.total[_values.name] = true;
@@ -535,6 +468,10 @@ class Form extends React.Component {
 		}, obj);
 
 		return obj;
+	}
+
+	generateFetchName = (_ReactProps) => {
+		return (typeof _ReactProps === 'string') ? _ReactProps : _ReactProps.name || _ReactProps.id;
 	}
 
 	_parseSyntheticEvent(e) {
