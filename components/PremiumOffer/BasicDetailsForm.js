@@ -1,17 +1,30 @@
 class BasicDetailsForm extends React.Component {
 	constructor(props) {
 		super(props);
+
+		this.update = this.update.bind(this);
 	}
 
 	initialDataTransform(initialData={}) {
-		if (!initialData) { return {}; }
-
-		if (!initialData['num_keys']) {
-			initialData['num_keys0'] = 'none';
-		} else {
+		if (initialData['num_keys']) {
+			if (initialData['num_keys'] && initialData['num_keys'] !== 2) {
+				initialData['num_keys0'] = 'none';
+			}
 			initialData['num_keys1'] = initialData['num_keys'].toString();
 		}
 		return initialData;
+	}
+
+	update(e, data) {
+		let d = Object.assign({}, data.data);
+		d['num_keys'] = (d['num_keys0'] === 'none') ? d['num_keys1'] : d['num_keys0'];
+
+		delete d['num_keys0'];
+		delete d['num_keys1'];
+
+		data.data = d;
+
+		this.props.update(e, data);
 	}
 
 	render() {
@@ -19,9 +32,9 @@ class BasicDetailsForm extends React.Component {
 			<Form
 				//update={this.update}
 				name='basic_details'
-				onMount={this.props.update}
-				onBlur={this.props.update}
-				onChange={this.props.update}
+				onMount={this.update}
+				onBlur={this.update}
+				onChange={this.update}
 				//onFocus={this.update}
 				initialData={this.props.initialData}
 				initialDataTransform={this.initialDataTransform}
@@ -34,11 +47,21 @@ class BasicDetailsForm extends React.Component {
 					<Fieldset name="equipment" serialization="array" meta={{summary: {
 						label: 'Features'
 					}}}>
-						<input id="equipment_0" type="checkbox" value="sat_nav"/><label htmlFor="equipment_0">Sat nav</label>
-						<input id="equipment_1" type="checkbox" value="panoramic_roof"/><label htmlFor="equipment_1">Panoramic roof / sun roof</label>
-						<input id="equipment_2" type="checkbox" value="heated_seats"/><label htmlFor="equipment_2">Heated seats</label>
-						<input id="equipment_3" type="checkbox" value="parking_cam"/><label htmlFor="equipment_3">Rear parking camera</label>
-						<input id="equipment_4" type="checkbox" value="sound_system"/><label htmlFor="equipment_4">Upgraded sound system</label>
+						<div>
+							<input id="equipment_0" type="checkbox" value="sat_nav"/><label htmlFor="equipment_0">Sat nav</label>
+						</div>
+						<div>
+							<input id="equipment_1" type="checkbox" value="panoramic_roof"/><label htmlFor="equipment_1">Panoramic roof / sun roof</label>
+						</div>
+						<div>
+							<input id="equipment_2" type="checkbox" value="heated_seats"/><label htmlFor="equipment_2">Heated seats</label>
+						</div>
+						<div>
+							<input id="equipment_3" type="checkbox" value="parking_cam"/><label htmlFor="equipment_3">Rear parking camera</label>
+						</div>
+						<div>
+							<input id="equipment_4" type="checkbox" value="sound_system"/><label htmlFor="equipment_4">Upgraded sound system</label>
+						</div>
 					</Fieldset>
 					{
 						/*
@@ -55,7 +78,17 @@ class BasicDetailsForm extends React.Component {
 
 					<h4>What colour are the seats?</h4>
 					<label>
-						<select name="seat_color" required>
+						<select name="seat_color" required meta={{summary: { mutate: function(fields) {
+							let value;
+							if (this.props.model.basic_details.seat_color) {
+								value = fields.filter(f => {
+									return this.props.model.basic_details.seat_color === f.value
+								});
+							}
+
+							return (value && value[0]) ? value[0].text : value;
+						}.bind(this, this.props.fields.seat_color)
+						}}}>
 							<option value="" disabled={true}>Select a colour</option>
 							{
 								this.props.fields.seat_color.map(f => {
@@ -67,8 +100,18 @@ class BasicDetailsForm extends React.Component {
 
 					<h4>How are they upholstered?</h4>
 					<label className="select">
-						<select name="seat_fabric" required>
-							<option value="" disabled={true}>Select a colour</option>
+						<select name="seat_fabric" required meta={{summary: { mutate: function(fields) {
+								let value;
+							if (this.props.model.basic_details.seat_fabric) {
+								value = fields.filter(f => {
+									return this.props.model.basic_details.seat_fabric === f.value
+								});
+							}
+
+							return (value && value[0]) ? value[0].text : value;
+						}.bind(this, this.props.fields.seat_fabric)
+						}}}>
+							<option value="" disabled={true}>Select a fabric</option>
 							{
 								this.props.fields.seat_fabric.map(f => {
 									return (<option key={f.value} name={f.value} value={f.value}>{f.text}</option>);
@@ -78,9 +121,18 @@ class BasicDetailsForm extends React.Component {
 					</label>
 
 					<h4>Do you have two working keys for the car?</h4>
-					
-					<Field name="num_keys0" handleOwnPropagation={true} meta={{summary: {
-						label: 'Number of keys'
+					{/* Use field to pass down summary */}
+					<Field handleOwnPropagation={true} meta={{summary: {
+						label: 'Number of keys',
+						mutate: () => {
+							let value = this.props.model.basic_details.num_keys0;
+
+							if (this.props.model.basic_details.num_keys0 === 'none') {
+								value = this.props.model.basic_details.num_keys1 || '--';
+							}
+
+							return value;
+						}
 					}}}>
 						<input id="num_keys_0___0" type="radio" name="num_keys0" value="2" required/>
 						<label htmlFor="num_keys_0___0">Yes</label>
@@ -94,6 +146,7 @@ class BasicDetailsForm extends React.Component {
 								return (input.checked && input.value === 'none');
 							}}
 						>
+						{ /*
 						<h4>How many working keys do you have?</h4>
 						<input id="num_keys_0___1" type="radio" name="num_keys1" value="0" required />
 						<label htmlFor="num_keys_0___1">None</label>
@@ -101,23 +154,19 @@ class BasicDetailsForm extends React.Component {
 						<label htmlFor="num_keys_1___1">1</label>
 						<input id="num_keys_2___1" type="radio" name="num_keys1" value="3" required />
 						<label htmlFor="num_keys_2___1">3+</label>
+						*/}
 
-						{
-							/*
-							// TODO - Hide this properly in the summary and pass on values to it
-						<Field name="num_keys1" handleOwnPropagation={true} meta={{summary: {
-							label: 'Number of keys 1'
+						<Field handleOwnPropagation={true} meta={{summary: {
+							show: false
 						}}}>
-						<h4>How many working keys do you have?</h4>
-						<input id="num_keys_0___1" type="radio" name="num_keys1" value="0" required />
-						<label htmlFor="num_keys_0___1">None</label>
-						<input id="num_keys_1___1" type="radio" name="num_keys1" value="1" required />
-						<label htmlFor="num_keys_1___1">1</label>
-						<input id="num_keys_2___1" type="radio" name="num_keys1" value="3" required />
-						<label htmlFor="num_keys_2___1">3+</label>
+							<h4>How many working keys do you have?</h4>
+							<input id="num_keys_0___1" type="radio" name="num_keys1" value="0" required />
+							<label htmlFor="num_keys_0___1">None</label>
+							<input id="num_keys_1___1" type="radio" name="num_keys1" value="1" required />
+							<label htmlFor="num_keys_1___1">1</label>
+							<input id="num_keys_2___1" type="radio" name="num_keys1" value="3" required />
+							<label htmlFor="num_keys_2___1">3+</label>
 						</Field>
-							*/
-						}
 					</Conditional>
 
 					<h4>Do you have the V5C logbook?</h4>

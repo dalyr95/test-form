@@ -98,7 +98,13 @@ class Form extends React.Component {
 		}
 
 		let model = this.__resolveModelPath(name, this.__Model);
+		const meta = model.meta;
 		model = this.__mergeDeep(model, DOMAttributes);
+
+		// Deep merge will stringify any functions in meta
+		if (meta) {
+			model.meta = meta;
+		}
 
 		this.__Model = this.updateModel(name, model, this.__Model);
 
@@ -133,7 +139,7 @@ class Form extends React.Component {
 			data: this._transformReactPropsToValues(),
 			name: this.props.name,
 			progress: JSON.parse(JSON.stringify(this._progress)),
-			raw: JSON.parse(JSON.stringify(this.__Model))
+			raw: Object.assign({}, this.__Model)
 		};
 	}
 
@@ -221,7 +227,7 @@ class Form extends React.Component {
 
 				// If current component has additional children, traverse through them as well!
 				if (child.props.children) {
-					let parentProps;
+					let parentProps = mergeParentProps;
 
 					// Don't care about error or conditionals here, just parse the children, find form elements
 
@@ -285,7 +291,10 @@ class Form extends React.Component {
 			}
 
 			if (!name) {
-				console.error(`Element \`${_ReactProps.type}\` does not have a name or id`, _ReactProps);
+				// A Field without a name is basically a prop passer
+				if (_ReactProps.type !== Field) {
+					console.error(`Element \`${_ReactProps.type}\` does not have a name or id`, _ReactProps);
+				}
 				return;
 			}
 
@@ -313,33 +322,33 @@ class Form extends React.Component {
 				// Get the props off the child element, such as name, type etc
 				let _ReactProps = this._getReactProps(child, mergeParentProps);
 
+				if (child.type === Field) {
+					if (Array.isArray(child.props.elements)) {
+						child.props.elements.forEach(el => {
+							let _ReactProps = this._getReactProps({
+								type: el.element,
+								props: el
+							}, mergeParentProps);
+							updateModel(_ReactProps);
+						});
+						return;
+					}
+				}
+
 				// If current component has additional children, traverse through them as well!
 				if (child.props.children) {
-					let parentProps;
+					let parentProps = mergeParentProps;
 
 					// Don't care about error or conditionals here, just parse the children, find form elements
 					
 					// Get the fieldset and assign it to the child
 					if (child.type === Fieldset) {
 						parentProps = {};
-						parentProps = Object.assign(mergeParentProps || {}, {
+						parentProps = Object.assign(parentProps || {}, {
 							fieldset: child.props.name,
 							serialization: child.props.serialization,
 							meta: child.props.meta
 						});
-					}
-
-					if (child.type === Field) {
-						if (Array.isArray(child.props.elements)) {
-							child.props.elements.forEach(el => {
-								let _ReactProps = this._getReactProps({
-									type: el.element,
-									props: el
-								}, mergeParentProps);
-								updateModel(_ReactProps);
-							});
-							return;
-						}
 					}
 
 					/**
@@ -351,10 +360,20 @@ class Form extends React.Component {
 							name: child.props.name
 						}));
 
-						parentProps = Object.assign(mergeParentProps || {}, {
+						parentProps = Object.assign(parentProps || {}, {
 							shown: shown
 						});
 					}
+
+					if (child.type === Field) {
+						// Use a field as a prop driller
+						if (child.props.meta) {
+							parentProps = Object.assign(parentProps || {}, {
+								meta: child.props.meta
+							});
+						}
+					}
+
 					updateModel(_ReactProps);
 					generateModel(child.props.children, parentProps);
 					return;
@@ -371,6 +390,8 @@ class Form extends React.Component {
 				if (!child || !child.props) {
 					return child;
 				}
+
+				console.log(child);
 
 				let _ReactProps = this._getReactProps(child);
 				let _values = getModel(_ReactProps);
@@ -418,7 +439,7 @@ class Form extends React.Component {
 
 				if (child.type === Field) {
 					// Make `updateForm` available to nested components
-					parentProps = Object.assign(mergeParentProps, {
+					parentProps = Object.assign(mergeParentProps || {}, {
 						updateForm: this.onChange
 					});
 				}
@@ -433,18 +454,20 @@ class Form extends React.Component {
 					...inputState
 				};
 
-				if (child.props.children) {
-					_props.children = renderWrappedChildren(child.props.children, parentProps);
+				/**
+				 * TODO - fieldset and meta seems to be sneaking onto nested divs
+				 * TODO - fieldset seems to not like children
+				 */
+				let {fieldset, ...props} = _props;
 
-					return React.cloneElement(child, _props);
+				if (child.props.children) {
+					props.children = renderWrappedChildren(child.props.children, parentProps);
+
+					return React.cloneElement(child, props);
 				}
 
 				// Return new component with overridden `onChange` callback
-				return React.cloneElement(child, {
-					onChange: child.props.onChange || (() => {}),
-					...customProps,
-					...inputState
-				});
+				return React.cloneElement(child, props);
 			});
 		}
 		
@@ -587,7 +610,7 @@ class Form extends React.Component {
 	}
 
 	_transformReactPropsToValues() {
-		let model = JSON.parse(JSON.stringify(this.__Model));
+		let model = Object.assign({}, this.__Model);
 		let values = {};
 
 		let fieldsets = {};
@@ -606,10 +629,11 @@ class Form extends React.Component {
 				fieldsets[value.fieldset] = fieldsets[value.fieldset] || starter;
 
 				if (value.serialization === 'array') {
-					fieldsets[value.fieldset].push(v);
+					if (v) { fieldsets[value.fieldset].push(v); }
 				} else {
 					fieldsets[value.fieldset][this.generateFetchName(value)] = v;
 				}
+				
 
 				return;
 			}

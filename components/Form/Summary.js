@@ -20,6 +20,8 @@ class Summary extends React.Component {
 			}
 		} else if (Array.isArray(value) && value.length > 0) {
 			v = value.map(v => `"${this.capitalizeFirstLetter(v)}"`).join(', ');
+		} else if (!isNaN(value)) {
+			v = value;
 		} else {
 			v = '--';
 		}
@@ -32,7 +34,7 @@ class Summary extends React.Component {
 	}
 
 	_transformFieldsets(data) {
-		let model = JSON.parse(JSON.stringify(data));
+		let model = Object.assign({}, data);
 		let values = {};
 
 		Object.entries(model).forEach(([k,v]) => {
@@ -49,6 +51,8 @@ class Summary extends React.Component {
 
 					var starter = (value.serialization === 'array') ? [] : {};
 					let f = fieldsets[value.fieldset] || {};
+					fieldsets[value.fieldset] = f;
+
 					f.name = (value.meta && value.meta.summary) ? value.meta.summary.label || value.fieldset : value.fieldset;
 					f.value = f.value || starter;
 					f.shown = (typeof f === 'boolean') ? f.shown : value.shown;
@@ -86,14 +90,24 @@ class Summary extends React.Component {
 				<ul>
 					{
 						values.filter(v => v.shown).map(v => {
-							let label;
-							if (v.meta && v.meta.summary) {
-								label = v.meta.summary.label;
+							let label, value;
+							if (v.meta) {
+								if (v.meta.summary) {
+									label = v.meta.summary.label;
+									if (v.meta.summary.show === false) {
+										return (null);
+									}
+
+									if (v.meta.summary.mutate) {
+										value = v.meta.summary.mutate();
+									}
+								}
 							}
+
 							return (
 								<li key={v.name || v.id} data-value={v.name || v.id}>
 									<div>{label || this.parseReadableValue(label || v.name || v.id)}</div>
-									<div>{this.parseReadableValue(v.value, v.type)}</div>
+									<div>{this.parseReadableValue(value || v.value, v.type)}</div>
 								</li>
 							);
 						})
