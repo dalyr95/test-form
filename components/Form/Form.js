@@ -391,8 +391,6 @@ class Form extends React.Component {
 					return child;
 				}
 
-				console.log(child);
-
 				let _ReactProps = this._getReactProps(child);
 				let _values = getModel(_ReactProps);
 

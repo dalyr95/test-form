@@ -361,13 +361,11 @@
 									<Form name="photos"
 										onMount={this.update}
 									>
-										hello
 										<Field elements={[
-											{element: 'input', name: 'hello1', type: 'checkbox', value: 1},
-											{element: 'input', name: 'hello2', type: 'checkbox', value: 2},
+											{element: 'input', name: 'hello1', type: 'checkbox', required: true, value: 1},
+											{element: 'input', name: 'hello2', type: 'checkbox', required: true, value: 2},
 										]}>
 										{/* Doesn't like children for some reason.... */}
-										hello
 										</Field>
 									</Form>
 									Photos do HTML pickup
