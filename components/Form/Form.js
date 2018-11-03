@@ -57,7 +57,7 @@ class Form extends React.Component {
 	}
 
 	componentDidUpdate() {
-		//console.log(`Start render to update for \`${this.props.name}\``, `${Math.round(performance.now() - this._time)}ms`);
+		console.log(`Start render to update for \`${this.props.name}\``, `${Math.round(performance.now() - this._time)}ms`);
 	}
 
 	onBlur(e) {

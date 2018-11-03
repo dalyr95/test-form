@@ -6,9 +6,9 @@ class Summary extends React.Component {
 	parseReadableValue(value, type) {
 		let v = value || '';
 
-		if (value.toString().toLowerCase() === 'true') {
+		if (v.toString().toLowerCase() === 'true') {
 			v = 'Yes';
-		} else if (value.toString().toLowerCase() === 'false') {
+		} else if (v.toString().toLowerCase() === 'false') {
 			v = 'No';
 		} else if (typeof value === 'string' && value.length > 0) {
 			v = this.capitalizeFirstLetter(value);
@@ -20,6 +20,8 @@ class Summary extends React.Component {
 			}
 		} else if (Array.isArray(value) && value.length > 0) {
 			v = value.map(v => `"${this.capitalizeFirstLetter(v)}"`).join(', ');
+		} else if (v === '') {
+			v = '--';
 		} else if (!isNaN(value)) {
 			v = value;
 		} else {

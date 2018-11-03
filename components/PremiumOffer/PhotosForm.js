@@ -1,9 +1,162 @@
 class PhotosForm extends React.Component {
 	constructor(props) {
 		super(props);
+
+    this.state = {
+      sections: {
+        exterior: {
+          title: 'Exterior',
+          strap: 'Ensure the whole of the car is visible in each photo.',
+          inputs: [
+            {
+              name: 'exterior_front_driver',
+              label: 'Front - Driver side'
+            },
+            {
+              name: 'exterior_rear_driver',
+              label: 'Back - Driver side'
+            },
+            {
+              name: 'exterior_front_passenger',
+              label: 'Front - Passenger side'
+            },
+            {
+              name: 'exterior_rear_passenger',
+              label: 'Back - Passenger side'
+            }
+          ]
+        },
+        interior: {
+          title: 'Interior',
+          strap: 'Take zoomed-out photos showing as much of the interior as possible.',
+          inputs: [
+            {
+              name: 'interior_front_seats',
+              label: 'Front seats'
+            },
+            {
+              name: 'interior_rear_seats',
+              label: 'Rear seats'
+            },
+            {
+              name: 'interior_dashboard',
+              label: 'Dashboard'
+            },
+            {
+              name: 'interior_boot',
+              label: 'Boot interior'
+            }
+          ]
+        },
+        wheels: {
+          title: 'Wheels',
+          strap: 'Take side-on photos showing the whole wheel and tyre.',
+          inputs: [
+            {
+              name: 'wheels_front_driver',
+              label: 'Front - Driver side'
+            },
+            {
+              name: 'wheels_rear_driver',
+              label: 'Rear - Driver side'
+            },
+            {
+              name: 'wheels_front_passenger',
+              label: 'Front - Passenger side'
+            },
+            {
+              name: 'wheels_rear_passenger',
+              label: 'Rear - Passenger side'
+            }
+          ]
+        },
+        treads: {
+          title: 'Tyre treads',
+          strap: 'Take close-up photos from the ground showing the tread of each tyre.',
+          inputs: [
+            {
+              name: 'tyre_tread_front_driver',
+              label: 'Front - Driver side'
+            },
+            {
+              name: 'tyre_tread_rear_driver',
+              label: 'Rear - Driver side'
+            },
+            {
+              name: 'tyre_tread_front_passenger',
+              label: 'Front - Passenger side'
+            },
+            {
+              name: 'tyre_tread_rear_passenger',
+              label: 'Rear - Passenger side'
+            }
+          ]
+        },
+        damage: {
+          title: 'Condition photos',
+          strap: 'Add photos of the issues you identified earlier.',
+          inputs: [
+            {
+              condition: 'condition.scratches',
+              name: 'damage_scratches',
+              label: 'Scratches'
+            },
+            {
+              condition: 'condition.scuffs',
+              name: 'damage_scuffs',
+              label: 'Scuffs'
+            },
+            {
+              condition: 'condition.dents',
+              name: 'damage_dents',
+              label: 'Dents'
+            },
+            {
+              condition: 'condition.paintwork',
+              name: 'damage_paintwork',
+              label: 'Paintwork problems'
+            },
+            {
+              condition: 'wheels_and_tyres.tyres',
+              name: 'damage_tyres',
+              label: 'Tyre problems'
+            },
+            {
+              condition: 'wheels_and_tyres.alloys',
+              name: 'damage_alloy_scuffs',
+              label: 'Alloy scuffs'
+            },
+            {
+              condition: 'condition.trim',
+              name: 'damage_missing_trims',
+              label: 'Missing trim'
+            },
+            {
+              condition: 'condition.dashboard',
+              name: 'damage_warning_lights',
+              label: 'Warning lights'
+            }
+          ]
+        }
+      }
+    }
 	}
 
 	render() {
+		let elements = [];
+		Object.values(this.state.sections).forEach(s => {
+			s.inputs.forEach(i => {
+				elements.push({
+					element: 'input',
+					type: 'file',
+					required: true,
+					value: null,
+					...i
+				})
+			});
+		});
+		console.log(elements);
+
 		return (
 			<Form
 				//update={this.update}
@@ -17,10 +170,7 @@ class PhotosForm extends React.Component {
 				visible={true}
 				seen={this.props.seen}
 			>	
-				<Field elements={[
-					{element: 'input', name: 'hello1', type: 'checkbox', required: true, value: 1},
-					{element: 'input', name: 'hello2', type: 'checkbox', required: true, value: 2},
-				]}>
+				<Field elements={elements}>
 				{/* Doesn't like children for some reason.... */}
 				</Field>
 			</Form>
