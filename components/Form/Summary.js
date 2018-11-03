@@ -105,7 +105,7 @@ class Summary extends React.Component {
 							}
 
 							return (
-								<li key={v.name || v.id} data-value={v.name || v.id}>
+								<li key={v.name || v.id} data-value={Array.isArray(v.value) ? v.value.join('-') : v.name || v.id}>
 									<div>{label || this.parseReadableValue(label || v.name || v.id)}</div>
 									<div>{this.parseReadableValue(value || v.value, v.type)}</div>
 								</li>

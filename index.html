@@ -22,6 +22,7 @@
 		<script src="/components/PremiumOffer/ServiceHistoryForm.js" type="text/babel"></script>
 		<script src="/components/PremiumOffer/ConditionForm.js" type="text/babel"></script>
 		<script src="/components/PremiumOffer/WheelsAndTyresForm.js" type="text/babel"></script>
+		<script src="/components/PremiumOffer/PhotosForm.js" type="text/babel"></script>
 
 		<!--
         <script src="https://unpkg.com/react@16/umd/react.development.js"></script>
@@ -250,8 +251,9 @@
 
 							// Silly visual effect, not really needed
 							let $summary = document.getElementById('summary');
-							let $li = $summary.querySelector(`li[data-value="${e.target.name}"]`);
-							// Doesn't work on fieldsets yet...
+							let $li = $summary.querySelector(`li[data-value*="${e.target.name || e.target.value}"]`);
+
+							// Doesn't work on fieldsets yet when removing item
 							if ($li) {
 								$li.addEventListener('animationend', () => {
 									$li.classList.remove('change');
@@ -307,7 +309,6 @@
 					.then(resp => resp.json())
 					.then((offer) => {
 						if (!offer.data) {
-							console.log('wtf');
 							return this.setState({
 								failed: true
 							});
@@ -367,17 +368,7 @@
 									<hr/>
 									<WheelsAndTyresForm update={this.update} initialData={this.state.initialData.data.wheels_and_tyres} seen={this.state.filledSections.includes('wheels_and_tyres')} />
 									<hr/>
-									<Form name="photos"
-										onMount={this.update}
-									>
-										<Field elements={[
-											{element: 'input', name: 'hello1', type: 'checkbox', required: true, value: 1},
-											{element: 'input', name: 'hello2', type: 'checkbox', required: true, value: 2},
-										]}>
-										{/* Doesn't like children for some reason.... */}
-										</Field>
-									</Form>
-									Photos do HTML pickup
+									<PhotosForm  update={this.update} />
 								</div>
 								<div id="summary" className="summary">
 									<Summary data={this.state.raw} offer={this.state.offer} />

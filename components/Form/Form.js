@@ -452,25 +452,29 @@ class Form extends React.Component {
 				}
 
 				let _props = {
-					onChange: child.props.onChange || (() => {}),
 					...customProps,
 					...inputState
 				};
 
+				// Only assign onChange to form elements
+				if (_values) {
+					_props.onChange = child.props.onChange || (() => {});
+				}
+
 				/**
-				 * TODO - fieldset and meta seems to be sneaking onto nested divs
-				 * TODO - fieldset seems to not like children
+				 * TODO - fieldset with elements seems to not like children
 				 */
-				let {fieldset, ...props} = _props;
+				// Remove reserved props
+				let {fieldset, meta, ...props} = child.props;
 
 				if (child.props.children) {
 					props.children = renderWrappedChildren(child.props.children, parentProps);
 
-					return React.cloneElement(child, props);
+					return React.createElement(child.type, Object.assign({}, props, _props));
 				}
 
 				// Return new component with overridden `onChange` callback
-				return React.cloneElement(child, props);
+				return React.createElement(child.type, Object.assign({}, props, _props));
 			});
 		}
 		
