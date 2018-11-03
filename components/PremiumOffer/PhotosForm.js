@@ -142,8 +142,19 @@ class PhotosForm extends React.Component {
     }
 	}
 
+	componentDidMount() {
+		return;
+		setTimeout(() => {
+			console.log(21312323);
+			this.setState({
+				damage: false
+			});
+		}, 5000);
+	}
+
 	render() {
 		let elements = [];
+
 		Object.values(this.state.sections).forEach(s => {
 			s.inputs.forEach(i => {
 				elements.push({
@@ -155,7 +166,7 @@ class PhotosForm extends React.Component {
 				})
 			});
 		});
-		console.log(elements);
+
 
 		return (
 			<Form
@@ -170,9 +181,7 @@ class PhotosForm extends React.Component {
 				visible={true}
 				seen={this.props.seen}
 			>	
-				<Field elements={elements}>
-				{/* Doesn't like children for some reason.... */}
-				</Field>
+				<Field elements={elements}></Field>
 			</Form>
 		);
 	}

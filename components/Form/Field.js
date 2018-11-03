@@ -21,6 +21,10 @@ class Field extends React.Component {
 			<fieldset onChange={this.onChange}>
 				{
 					React.Children.map(this.props.children, (child) => {
+						if (!child || !child.props) {
+							return child;
+						}
+
 						let p = {};
 
 						// In case anyone passed in a DOM element as a child
