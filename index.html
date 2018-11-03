@@ -183,7 +183,11 @@
 				padding: 4px;
 			}
 
-			.invalid {
+			.seen:not(:focus) {
+				box-shadow: 0 0 0 2px yellow;
+			}
+
+			.invalid:not(:focus) {
 				background-color: rgba(255, 0, 0, 0.2);
 				box-shadow: 0 0 0 2px red;
 			}
@@ -191,10 +195,7 @@
 			.valid:not(:focus) {
 				background-color: #edfcf4;
 				border-color: #4bde8b;
-			}
-
-			.seen:not(:focus) {
-				box-shadow: 0 0 0 2px yellow;
+				box-shadow: 0 0 0 2px #4bde8b;
 			}
 
 			img {
@@ -301,22 +302,30 @@
 					let platform = params.get('platform') || 'http://192.168.86.111:3030/api';
 					
 					//fetch("https://motorway-platform-stage.herokuapp.com/api/premium-offer?vrm=RD1", {"credentials":"omit","headers":{"x-access-token":accessToken},"body":null,"method":"GET","mode":"no-cors"})
-					fetch(`${platform}/premium-offer?vrm=${vrm}`, {"credentials":"omit","headers":{"x-access-token":token},"body":null,"method":"GET","mode":"cors"})
-					//fetch('/offer.json')
+					//fetch(`${platform}/premium-offer?vrm=${vrm}`, {"credentials":"omit","headers":{"x-access-token":token},"body":null,"method":"GET","mode":"cors"})
+					fetch('/offer.json')
 					.then(resp => resp.json())
 					.then((offer) => {
 						if (!offer.data) {
+							console.log('wtf');
 							return this.setState({
 								failed: true
 							});
 						}
+
 						this.setState({
 							id: offer.id,
 							loading: false,
 							offer: offer.data,
+							filledSections: offer.filled_sections,
 							initialData: offer
 						}, () => {
 							console.log(offer);
+						});
+					})
+					.catch((e) => {
+						this.setState({
+							failed: true
 						});
 					});
 				}
@@ -350,13 +359,13 @@
 							</div>
 							<div className="container">
 								<div className="forms">
-									<BasicDetailsForm update={this.update} initialData={this.state.initialData.data.basic_details} fields={this.state.initialData.fields} model={this.state.offer}/>
+									<BasicDetailsForm update={this.update} initialData={this.state.initialData.data.basic_details} fields={this.state.initialData.fields} model={this.state.offer}  seen={this.state.filledSections.includes('basic_details')}/>
 									<hr/>
-									<ServiceHistoryForm update={this.update} initialData={this.state.initialData.data.service_history} />
+									<ServiceHistoryForm update={this.update} initialData={this.state.initialData.data.service_history} seen={this.state.filledSections.includes('service_history')} />
 									<hr/>
-									<ConditionForm update={this.update} initialData={this.state.initialData.data.condition} />
+									<ConditionForm update={this.update} initialData={this.state.initialData.data.condition} seen={this.state.filledSections.includes('condition')}/>
 									<hr/>
-									<WheelsAndTyresForm update={this.update} initialData={this.state.initialData.data.wheels_and_tyres} />
+									<WheelsAndTyresForm update={this.update} initialData={this.state.initialData.data.wheels_and_tyres} seen={this.state.filledSections.includes('wheels_and_tyres')} />
 									<hr/>
 									<Form name="photos"
 										onMount={this.update}

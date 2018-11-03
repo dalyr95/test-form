@@ -40,6 +40,7 @@ class BasicDetailsForm extends React.Component {
 				initialDataTransform={this.initialDataTransform}
 				persistEvents={false} // Has a performance impact, only use if you need event data
 				visible={true}
+				seen={this.props.seen}
 			>	
 				<React.Fragment>
 					<h2>Basic details</h2>

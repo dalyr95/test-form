@@ -74,7 +74,7 @@ class Form extends React.Component {
 		if (this.props.persistEvents) { e.persist(); }
 
 		this.setState({
-			interacted: {...this.state.interacted, [e.target.name]: true},
+			interacted: {...this.state.interacted, [e.target.name || e.target.id]: true},
 			$focused: e.target
 		});
 
@@ -433,6 +433,11 @@ class Form extends React.Component {
 						this._progress.total[_values.name] = true;
 						if (_values.valid === true) { this._progress.completed[_values.name] = true; }
 					}
+
+					if (this.props.seen || this.state.interacted[_values.name || _values.id]) {
+						customProps.className = `${child.props.className || ''} seen`;
+						customProps.className = `${customProps.className || ''} ${(_values.valid) ? 'valid' : 'invalid'}`.trim();
+					}
 				}
 
 				if (child.type === Field) {
@@ -482,7 +487,7 @@ class Form extends React.Component {
 		this._progress.percentage = Number.isInteger(this._progress.percentage) ? this._progress.percentage : 100;
 
 		// Remove any reserved props such as update
-		let {update, persistEvents, onMount, visible, initialData, initialDataTransform, updateForm, ...props} = this.props;
+		let {update, persistEvents, onMount, visible, initialData, initialDataTransform, updateForm, seen, ...props} = this.props;
 
 		if (!this.props.children || this.props.visible === false) {
 			return (null);

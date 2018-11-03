@@ -88,6 +88,7 @@ class ConditionForm extends React.Component {
 				initialData={this.props.initialData}
 				persistEvents={false} // Has a performance impact, only use if you need event data
 				visible={true}
+				seen={this.props.seen}
 			>	
 				<h2>Condition</h2>
 				<h4>Does your car have any of the following?</h4>

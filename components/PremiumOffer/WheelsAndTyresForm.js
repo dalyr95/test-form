@@ -50,6 +50,7 @@ class WheelsAndTyresForm extends React.Component {
 				//onFocus={this.update}
 				persistEvents={false} // Has a performance impact, only use if you need event data
 				visible={true}
+				seen={this.props.seen}
 			>	
 				<h2>Wheels & tyres</h2>
 

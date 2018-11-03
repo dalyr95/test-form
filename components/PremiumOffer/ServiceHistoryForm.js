@@ -25,6 +25,7 @@ class ServiceHistoryForm extends React.Component {
 				initialData={this.props.initialData}
 				persistEvents={false} // Has a performance impact, only use if you need event data
 				visible={true}
+				seen={this.props.seen}
 			>	
 				<h2>Service history</h2>
 				<h4>What is the service history of your car?</h4>
